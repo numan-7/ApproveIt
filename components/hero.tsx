@@ -1,22 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
-export default function Hero() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+interface HeroProps {
+  openSidebar: () => void;
+}
 
-  const openSidebar = () => setIsSidebarOpen(true);
-
+export default function Hero({ openSidebar }: HeroProps) {
   const containerVariants = {
     hidden: { opacity: 0, y: -50 },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.8,
+        duration: 0.5,
         ease: "easeOut",
       },
     },

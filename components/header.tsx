@@ -1,20 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SignIn from "@/components/sign-in";
 import Link from "next/link";
 
-export default function Header() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+interface HeaderProps {
+  isSidebarOpen: boolean;
+  openSidebar: () => void;
+  closeSidebar: () => void;
+}
 
-  const openSidebar = () => setIsSidebarOpen(true);
-  const closeSidebar = () => setIsSidebarOpen(false);
+const containerVariants = {
+  hidden: { opacity: 0, y: -50 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+};
 
+export default function Header({
+  isSidebarOpen,
+  openSidebar,
+  closeSidebar,
+}: HeaderProps) {
   return (
-    <header className="absolute top-0 left-0 right-0 z-50 backdrop-blur-[2px]">
+    <motion.header
+      className="absolute top-0 left-0 right-0 z-50 backdrop-blur-[2px]"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
       <div className="mx-6 h-16 flex justify-between items-center">
         <Link href="/">
           <img src="/logo.png" alt="ApproveIt" className="h-8" />
@@ -50,6 +72,6 @@ export default function Header() {
           </SheetContent>
         </Sheet>
       </div>
-    </header>
+    </motion.header>
   );
 }
