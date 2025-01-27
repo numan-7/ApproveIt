@@ -34,7 +34,7 @@ export function RetractableSidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col text-card-foreground transition-all duration-300 ease-in-out shadow-lg ",
+        "flex flex-col text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50",
         isExpanded ? "w-64" : "w-20"
       )}
       style={{
@@ -44,6 +44,7 @@ export function RetractableSidebar() {
         backgroundRepeat: "no-repeat",
       }}
     >
+      
       <div
         className={cn(
           "flex items-center p-4",

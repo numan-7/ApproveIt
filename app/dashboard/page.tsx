@@ -90,9 +90,10 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen w-full flex flex-col">
+    <div className="min-h-screen w-full flex flex-col" >
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        
         <Link href="/dashboard/create">
           <Button>
             <PlusCircle className="mr-2 h-4 w-4" />

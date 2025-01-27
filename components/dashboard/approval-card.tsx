@@ -66,10 +66,7 @@ export function ApprovalCard({ approval, isMyRequest, onToggleExpand }: Approval
                     <p className="text-xs">{file.size}</p>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
+                <div className="flex">
                   <Button variant="ghost" size="sm">
                     <Download className="h-4 w-4" />
                   </Button>
@@ -83,33 +80,36 @@ export function ApprovalCard({ approval, isMyRequest, onToggleExpand }: Approval
           <h3 className="font-medium mb-3">Comments</h3>
           <ScrollArea className="h-[240px] rounded-md border">
             <div className="p-4 grid gap-4">
-              {approval.comments.map((comment, index) => (
-                <div key={index} className="flex gap-4">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>{comment.user[0]}</AvatarFallback>
-                  </Avatar>
-                  <div className="grid gap-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">{comment.user}</span>
-                      <span className="text-xs">{comment.date}</span>
-                    </div>
-                    <p className="text-sm">{comment.text}</p>
+            {approval.comments.length > 0 ? (
+              approval.comments.map((comment, index) => (
+                  <div key={index} className="flex gap-4">
+                      <Avatar className="h-8 w-8">
+                          <AvatarFallback>{comment.user[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="grid gap-1">
+                          <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{comment.user}</span>
+                              <span className="text-xs">{comment.date}</span>
+                          </div>
+                          <p className="text-sm">{comment.text}</p>
+                      </div>
                   </div>
-                </div>
-              ))}
+                ))) : (
+                  <p className="text-sm text-gray-500">No comments yet.</p>
+              )}
             </div>
           </ScrollArea>
         </div>
       </CardContent>
 
-      <CardFooter>
+      <CardFooter className ="flex gap-2">
         {!isMyRequest && (
           <>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full bg-emerald-800 hover:bg-emerald-700 text-white hover:text-whtie">
               <Check className="mr-2 h-4 w-4" />
               Approve
             </Button>
-            <Button variant="outline" className="w-full">
+            <Button variant="destructive" className="w-full">
               <X className="mr-2 h-4 w-4" />
               Reject
             </Button>
