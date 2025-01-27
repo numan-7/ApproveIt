@@ -3,7 +3,7 @@ import GoogleLogo from "@/components/google-logo";
 
 export default function SignIn() {
   return (
-    <div className="h-screen bg-lime-950 relative font-main">
+    <div className="h-screen bg-forest relative font-main shadow-md">
       <div className="absolute top-0 right-0 w-72 opacity-20 z-0">
         <img src="/cta_right.webp" alt="Decorative" className="w-full h-auto" />
       </div>

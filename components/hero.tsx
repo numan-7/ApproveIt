@@ -54,7 +54,7 @@ export default function Hero({ openSidebar }: HeroProps) {
           </p>
           <Link href = "/dashboard">
           <Button
-            className="bg-white/95 text-lime-950 hover:bg-white/90 text-lg h-12 px-8 rounded-full group"
+            className="bg-white/95 text-forest hover:bg-white/90 text-lg h-12 px-8 rounded-full group"
             // onClick={openSidebar}
             // go to /dashboard
           >
