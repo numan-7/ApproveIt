@@ -31,7 +31,7 @@ export default function Hero({ openSidebar }: HeroProps) {
       <div
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: 'url("/image.webp")',
+          backgroundImage: 'url("/sidebar_background_2.jpg")',
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

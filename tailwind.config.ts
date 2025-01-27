@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
 const config: Config = {
   darkMode: ["class"],
@@ -58,7 +58,8 @@ const config: Config = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        main: ["var(--font-play-fair-display)", "serif"],
+        main: ["var(--font-playfair-display)", "serif"],
+        poppins: ["var(--font-poppins)", "sans-serif"],
         sans: ["var(--font-playfair-display)", "serif"],
       },
       keyframes: {
@@ -78,6 +79,6 @@ const config: Config = {
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+}
 
-export default config;
+export default config
