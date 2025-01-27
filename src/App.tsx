@@ -1,8 +1,6 @@
-import React from "react";
 import {  Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-import SignIn from "./components/SignIn";
 import Footer from "./components/Footer";
 
 function App() {

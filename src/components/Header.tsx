@@ -9,12 +9,12 @@ export default function Header() {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-50">
+    <header className="absolute top-0 left-0 right-0 z-50 backdrop-blur-[2px]">
       <div className="mx-6 h-16 flex justify-between items-center">
         <Link to="/">
           <img src="/logo.png" alt="ApproveIt" className="h-10" />
         </Link>
-        <span className="text-2xl text-white tracking-tighter font-semibold">
+        <span className="text-2xl text-white tracking-tighter">
           APPROVEIT
         </span>
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -25,11 +25,11 @@ export default function Header() {
             </Button>
           </SheetTrigger>
 
-          <SheetContent className="w-full sm:w-[540px] p-0 backdrop-blur-md bg-white">
+          <SheetContent className="ring-0 border-0 focus-visible:ring-offset-0 focus-visible:ring-0 w-full sm:w-[540px] p-0 backdrop-blur-md bg-white">
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-4 top-4 z-50 text-gray-800 hover:bg-gray-200"
+              className="absolute right-4 top-4 z-50 rounded-lg text-gray-200 hover:bg-gray-900 hover:text-gray-200"
               onClick={() => setIsSheetOpen(false)}
             >
               <X className="h-6 w-6" />

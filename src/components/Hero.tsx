@@ -16,19 +16,19 @@ export default function Hero() {
       />
       <div className="absolute top-0 right-0 w-64 z-0">
         <img src="/cta_right.webp" alt="" className="w-full h-auto" />
-      </div>
+      </div>     
       <div className="absolute inset-0 bg-black/50 z-10" />
       <div className="container mx-auto lg:mx-16 px-4 relative z-20">
         <div className="max-w-3xl mx-6">
-          <h1 className="text-6xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight tracking-tighter">
+          <h1 className="text-6xl md:text-7xl lg:text-8xl text-white mb-6 leading-tight tracking-tighter inline-block">
             Streamlining
             <br />
-            <span >Approvals</span>
+            <span className="inline-block">Approvals</span>
           </h1>
           <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed max-w-2xl">
             Transform your workflow with intelligent approval management. Get instant visibility and control.
           </p>
-          <Button className="bg-white/95 text-secondary hover:bg-white/90 text-lg h-12 px-8 rounded-full group">
+          <Button className="bg-white/95 text-lime-950 hover:bg-white/90 text-lg h-12 px-8 rounded-full group ">
             Get Started
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
