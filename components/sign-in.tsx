@@ -14,7 +14,7 @@ export default function SignIn() {
       <div className="container mx-auto flex items-center justify-center min-h-full p-4 z-10">
         <div className="p-8 w-full max-w-md animate-fadeIn">
           <div className="flex items-center justify-start gap-2">
-            <img src="/logo.png" alt="ApproveIt Logo" className="h-10" />
+            <img src="/logo.svg" alt="ApproveIt Logo" className="h-10" />
             <h1 className="border-l-2 text-4xl p-2 text-white/95 text-left mb-4 tracking-tighter">
                APPROVEIT
             </h1>

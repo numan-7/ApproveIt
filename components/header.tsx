@@ -37,9 +37,9 @@ export default function Header({
       animate="visible"
       variants={containerVariants}
     >
-      <div className="mx-6 h-16 flex justify-between items-center">
+      <div className="mx-6 h-16 flex items-center justify-between">
         <Link href="/">
-          <img src="/logo.png" alt="ApproveIt" className="h-8" />
+          <img src="/logo.svg" alt="ApproveIt" className="h-8" />
         </Link>
         <span className="text-2xl text-white tracking-tighter">APPROVEIT</span>
 
