@@ -24,7 +24,7 @@ export default function SignIn() {
             Sign in to manage your approvals effortlessly.
           </p>
 
-          <Button className="w-full bg-gray-100 text-gray-800 hover:bg-gray-200 flex items-center justify-center h-12 rounded-lg shadow-sm">
+          <Button className="text-md w-full bg-gray-100 text-gray-800 hover:bg-gray-200 flex items-center justify-center h-12 rounded-full text-forest shadow-sm">
             <GoogleLogo className="h-5 w-5" />
             <span className="tracking-tighter ml-2">Sign In With Google</span>
           </Button>

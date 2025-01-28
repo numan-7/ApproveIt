@@ -26,15 +26,15 @@ export function RetractableSidebar() {
   }
 
   const menuItems = [
-    { href: "/dashboard", icon: Home, label: "DASHBOARD" },
-    { href: "/dashboard/create", icon: PlusCircle, label: "CREATE APPROVALS" },
+    { href: "/dashboard", icon: Home, label: "Dashboard" },
+    { href: "/dashboard/create", icon: PlusCircle, label: "Create Approvals" },
     // { href: "/dashboard/approvals", icon: CheckCircle, label: "Approvals" },
   ]
 
   return (
     <div
       className={cn(
-        "flex flex-col text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50",
+        "flex flex-col relative z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50",
         isExpanded ? "w-64" : "w-20"
       )}
       style={{
@@ -44,10 +44,12 @@ export function RetractableSidebar() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      
+
+      <div className="absolute inset-0 bg-black/40 z-10" />
+
       <div
         className={cn(
-          "flex items-center p-4",
+          "flex items-center p-4 z-20",
           isExpanded ? "justify-between" : "justify-center"
         )}
       >
@@ -69,7 +71,7 @@ export function RetractableSidebar() {
           <Button
             variant="ghost"
             size="icon"
-            className="hover:bg-forest"
+            className="hover:bg-forest/10 z-20"
             onClick={toggleSidebar}
           >
             <PanelLeft className="h-4 w-4 text-white" />
@@ -78,17 +80,16 @@ export function RetractableSidebar() {
       </div>
 
       {/* Navigation Menu */}
-      <nav className="flex-1">
+      <nav className="flex-1 z-20">
         <ul className="space-y-2 px-2">
           {menuItems.map((item) => (
             <li key={item.href}>
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-center p-2 rounded-lg text-md text-white font-medium font-main transition-colors hover:backdrop-blur-md ",
-                  pathname === item.href &&
-                    "backdrop-blur-md text-forest", 
-                  !isExpanded && "justify-center"
+                    "flex items-center p-2 rounded-md text-sm font-medium tracking-wider text-white uppercase transition-colors hover:bg-forest/10",
+                    pathname === item.href && "bg-forest/20 text-white",
+                    !isExpanded && "justify-center",
                 )}
               >
                 <item.icon className={cn("h-5 w-5", isExpanded && "mr-2")} />
@@ -103,11 +104,11 @@ export function RetractableSidebar() {
 
       {/* Bottom Toggle Button */}
       {!isExpanded && (
-        <div className="flex justify-center p-4 mt-auto">
+        <div className="flex justify-center p-4 mt-auto z-20">
           <Button
             variant="ghost"
             size="icon"
-            className="hover:bg-forest"
+            className="hover:bg-forest/10"
             onClick={toggleSidebar}
           >
             <PanelLeft className="h-4 w-4 text-white" />

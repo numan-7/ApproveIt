@@ -37,7 +37,7 @@ export default function Hero({ openSidebar }: HeroProps) {
           backgroundRepeat: "no-repeat",
         }}
       />
-      <div className="absolute inset-0 bg-black/50 z-10" />
+      <div className="absolute inset-0 bg-black/40 z-10" />
 
       <div className="container mx-auto lg:mx-16 px-4 relative z-20">
         <motion.div
