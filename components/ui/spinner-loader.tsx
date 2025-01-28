@@ -4,13 +4,13 @@ export function SpinnerLoader() {
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <div className="loader"></div>
-      <p className="mt-4 text-primary font-semibold">Processing...</p>
+      <p className="mt-4 text-primary ">Processing...</p>
       <style>{`
         .loader {
           width: 50px;
           aspect-ratio: 1;
           display: grid;
-          color: #514b82;
+          color: #1c2c26;
           background: 
             conic-gradient(from 90deg at 3px 3px,#0000 90deg,currentColor 0)
             -3px -3px/calc(50% + 1.5px) calc(50% + 1.5px);
