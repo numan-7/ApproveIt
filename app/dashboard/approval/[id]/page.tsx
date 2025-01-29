@@ -6,7 +6,7 @@ import { ApprovalCard } from "@/components/dashboard/approval-card"
 import { Button } from "@/components/ui/button"
 import { SpinnerLoader } from "@/components/ui/spinner-loader"
 import { ArrowLeft } from "lucide-react"
-import type { Approval } from "@/app/types/approval"
+import type { Approval } from "@/types/approval"
 
 const mockApprovals: Approval[] = [
   {

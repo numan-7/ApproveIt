@@ -2,7 +2,7 @@ import React from "react"
 import Link from "next/link"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import type { Approval } from "@/app/types/approval"
+import type { Approval } from "@/types/approval"
 
 interface ApprovalTableProps {
   approvals: Approval[]

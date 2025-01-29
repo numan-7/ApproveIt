@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Check, X, Paperclip, Download } from "lucide-react"
-import type { Approval } from "@/app/types/approval"
+import type { Approval } from "@/types/approval"
 
 interface ApprovalCardProps {
   approval: Approval

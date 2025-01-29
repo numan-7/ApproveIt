@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ApprovalTable } from "@/components/dashboard/approval-table"
 import { Pagination } from "@/components/dashboard/pagination"
 // import { SpinnerLoader } from "@/components/ui/spinner-loader"
-import type { Approval } from "@/app/types/approval"
+import type { Approval } from "@/types/approval"
 
 const ITEMS_PER_PAGE = 10
 
