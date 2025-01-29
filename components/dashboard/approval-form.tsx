@@ -58,15 +58,15 @@ export function ApprovalForm() {
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           {approvers.map((email) => (
-            <Badge key={email} variant="default" className="text-sm pl-2 pr-1">
+            <Badge key={email} variant="outline" className="font-normal text-sm pl-2 pr-1">
               {email}
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-auto p-0 ml-2 hover:bg-transparent"
+                className="h-auto p-0 ml-2 text-red-700 hover:text-red-700 rounded-sm"
                 onClick={() => removeApprover(email)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 hover:text-inherit" />
               </Button>
             </Badge>
           ))}

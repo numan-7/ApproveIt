@@ -165,7 +165,7 @@ export function RetractableSidebar() {
             )}
           >
             <img
-              src={user?.user_metadata?.avatar_url || "/default-avatar.png"}
+              src={user?.user_metadata?.avatar_url || "/sidebar_background.webp"}
               alt="User Avatar"
               className={cn(
                 "h-8 w-8 rounded-sm mr-2",
