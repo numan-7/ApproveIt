@@ -22,5 +22,5 @@ export interface Approval {
   priority: "high" | "medium" | "low";
   comments: Comment[];
   attachments: Attachment[];
-  expanded: boolean;
+  expanded?: boolean;
 }

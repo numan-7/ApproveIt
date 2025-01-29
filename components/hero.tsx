@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import OneTapComponent from "@/components/one-tap-component"; 
 import Link from "next/link";
 
 interface HeroProps {
@@ -52,18 +53,16 @@ export default function Hero({ openSidebar }: HeroProps) {
           <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed max-w-2xl">
             Transform your workflow with intelligent approval management. Get instant visibility and control.
           </p>
-          <Link href = "/dashboard">
           <Button
             className="bg-white/95 text-forest hover:bg-white/90 text-lg h-12 px-8 rounded-full group"
-            // onClick={openSidebar}
-            // go to /dashboard
+            onClick={openSidebar}
           >
             Get Started
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
-          </Link>
         </motion.div>
       </div>
+      <OneTapComponent />
     </motion.section>
   );
 }

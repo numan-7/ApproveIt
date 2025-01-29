@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Poppins } from "next/font/google"
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair-display" })
 const poppins = Poppins({
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${playfair.variable}`}>
       <body className={`${playfair.className} antialiased`}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

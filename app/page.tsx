@@ -4,6 +4,7 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import Hero from "@/components/hero";
 import { useState } from "react";
+import { createClientForServer } from "@/utils/supabase/server";
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
