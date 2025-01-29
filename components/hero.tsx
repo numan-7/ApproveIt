@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import OneTapComponent from "@/components/one-tap-component"; 
 import Link from "next/link";
 
 interface HeroProps {
@@ -61,6 +62,7 @@ export default function Hero({ openSidebar }: HeroProps) {
           </Button>
         </motion.div>
       </div>
+      <OneTapComponent />
     </motion.section>
   );
 }
