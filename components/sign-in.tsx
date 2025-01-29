@@ -3,7 +3,7 @@ import GoogleLogo from "@/components/google-logo";
 import { signInWithGoogle } from "@/utils/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
-import { ArrowRight, Loader2, LogOut } from "lucide-react"; 
+import { ArrowRight, LayoutDashboard, Loader2, LogOut } from "lucide-react"; 
 import { useRouter } from "next/navigation";
 
 export default function SignIn() {
@@ -56,16 +56,16 @@ export default function SignIn() {
               onClick={() => router.push("/dashboard")}
               className="relative z-25 font-main bg-white/95 w-full text-forest hover:bg-white/90 text-lg h-12 px-8 rounded-full group"
             >
+              <LayoutDashboard className="mr-2 h-4 w-4" />
               Dashboard
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
 
             <Button
               onClick={signOut}
               className="mt-4 relative z-25 font-main bg-red-800/95 w-full text-white hover:bg-red-800/90 text-lg h-12 px-8 rounded-full group"
             >
+              <LogOut className="mr-2 h-4 w-4" />
               Sign Out
-              <LogOut className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
           </>
         ) : (

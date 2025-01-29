@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import createClientForBrowser from "@/utils/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: User | null;
@@ -18,6 +19,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const supabase = createClientForBrowser();
+  const router = useRouter();
 
   useEffect(() => {
     const getUser = async () => {
@@ -45,9 +47,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await fetch("/auth/logout", { method: "GET" });
     setUser(null);
     setSession(null);
+    router.push("/");
   };
 
   return (

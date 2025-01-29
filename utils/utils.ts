@@ -8,8 +8,6 @@ const signInWith = (provider: Provider) => async (): Promise<void> => {
   const supabase = await createClientForServer();
   const auth_callback_url = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/dashboard`;
 
-  console.log("auth_callback_url", auth_callback_url);
-
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {

@@ -1,39 +1,43 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { Home, PlusCircle, CheckCircle, ChevronDown, PanelLeft, FileText } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Home,
+  PlusCircle,
+  CheckCircle,
+  ChevronDown,
+  PanelLeft,
+  FileText,
+  LogOut,
+  ChevronsUpDown
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { motion } from "framer-motion";
 
 export function RetractableSidebar() {
-  const [isExpanded, setIsExpanded] = useState(true)
-  const [isApprovalsExpanded, setIsApprovalsExpanded] = useState(true)
-  const pathname = usePathname()
-
-  useEffect(() => {
-    const savedState = localStorage.getItem("sidebar-expanded")
-    if (savedState !== null) {
-      setIsExpanded(savedState === "true")
-    }
-  }, [])
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isApprovalsExpanded, setIsApprovalsExpanded] = useState(true);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const { user, signOut } = useAuth();
 
   const toggleSidebar = () => {
-    const newState = !isExpanded
-    setIsExpanded(newState)
-    localStorage.setItem("sidebar-expanded", newState.toString())
-  }
+    const newState = !isExpanded;
+    setIsExpanded(newState);
+  };
 
   const handleApprovalsClick = () => {
     if (!isExpanded) {
-      setIsExpanded(true)
-      localStorage.setItem("sidebar-expanded", "true")
-      setIsApprovalsExpanded(true)
+      setIsExpanded(true);
+      setIsApprovalsExpanded(true);
     } else {
-      setIsApprovalsExpanded(!isApprovalsExpanded)
+      setIsApprovalsExpanded(!isApprovalsExpanded);
     }
-  }
+  };
 
   const menuItems = [
     { href: "/dashboard", icon: Home, label: "Dashboard" },
@@ -46,13 +50,13 @@ export function RetractableSidebar() {
         { href: "/dashboard/approvals/my-requests", icon: FileText, label: "My Requests" },
       ],
     },
-  ]
+  ];
 
   return (
     <div
       className={cn(
         "flex flex-col relative z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50",
-        isExpanded ? "w-64" : "w-20",
+        isExpanded ? "w-64" : "w-16",
       )}
       style={{
         backgroundImage:
@@ -64,6 +68,7 @@ export function RetractableSidebar() {
     >
       <div className="absolute inset-0 bg-black/40 z-10" />
 
+      {/* Sidebar Header */}
       <div className={cn("flex items-center p-4 z-20", isExpanded ? "justify-between" : "justify-center")}>
         <Link href="/">
           <div className={cn("flex h-8 items-center transition-all duration-300", !isExpanded && "justify-center")}>
@@ -77,6 +82,7 @@ export function RetractableSidebar() {
         )}
       </div>
 
+      {/* Navigation Links */}
       <nav className="flex-1 z-20">
         <ul className="space-y-2 px-2">
           {menuItems.map((item) => (
@@ -136,7 +142,8 @@ export function RetractableSidebar() {
           ))}
         </ul>
       </nav>
-
+      
+      {/* Toggle Sidebar Button */}
       {!isExpanded && (
         <div className="flex justify-center p-4 mt-auto z-20">
           <Button variant="ghost" size="icon" className="hover:bg-forest/10" onClick={toggleSidebar}>
@@ -144,6 +151,57 @@ export function RetractableSidebar() {
           </Button>
         </div>
       )}
+
+      {/* User Menu */}
+      {user && (
+        <div className="relative mt-auto z-20 border-t-2 border-white/50 font-poppins tracking-wider">
+          <button
+            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            className={cn(
+              "flex items-center w-full rounded-md text-white bg-forest/20 p-2 transition-colors",
+              !isExpanded && "justify-center"
+            )}
+          >
+            <img
+              src={user?.user_metadata?.avatar_url || "/default-avatar.png"}
+              alt="User Avatar"
+              className={cn(
+                "h-8 w-8 rounded-sm mr-2",
+                !isExpanded && "mr-0"
+              )}
+            />
+            {isExpanded && 
+              <>
+                <span className="text-sm truncate">{user?.email}</span>
+                <ChevronsUpDown className="h-5 w-5 ml-auto" />
+              </>
+            } 
+          </button>
+
+          {/* Floating Sign Out Menu */}
+          {isUserMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className={cn(
+                "absolute bg-black/50 rounded-lg shadow-lg",
+                isExpanded ? "bottom-[54px] left-0 w-64" : "bottom-[54px] left-0 w-64" 
+              )}
+            >
+              <Button
+                onClick={signOut}
+                variant="ghost"
+                className="flex items-center w-full p-2 text-white font-poppins uppercase tracking-wider hover:bg-black/70 hover:text-white rounded-md transition"
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                <span>Sign Out</span>
+              </Button>
+            </motion.div>
+          )}
+        </div>
+      )}
     </div>
-  )
+  );
 }
