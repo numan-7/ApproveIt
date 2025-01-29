@@ -10,7 +10,8 @@ import {
   PanelLeft,
   FileText,
   LogOut,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export function RetractableSidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isApprovalsExpanded, setIsApprovalsExpanded] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const pathname = usePathname();
   const { user, signOut } = useAuth();
 
@@ -158,7 +160,7 @@ export function RetractableSidebar() {
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             className={cn(
-              "flex items-center w-full rounded-md text-white bg-forest/20 p-2 transition-colors",
+              "flex items-center w-full rounded-md text-white bg-black/20 hover:bg-black/30 p-2 transition-colors",
               !isExpanded && "justify-center"
             )}
           >
@@ -181,21 +183,31 @@ export function RetractableSidebar() {
           {/* Floating Sign Out Menu */}
           {isUserMenuOpen && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              initial={{ opacity: 0, scale: 0.96 }} 
+              animate={{ opacity: 1, scale: 1 }}   
+              transition={{ duration: 0.1, ease: "easeOut" }} 
               className={cn(
-                "absolute bg-black/50 rounded-lg shadow-lg",
-                isExpanded ? "bottom-[54px] left-0 w-64" : "bottom-[54px] left-0 w-64" 
+                "absolute bg-black/30 rounded-lg shadow-lg transition-all",
+                isExpanded ? "bottom-[5px] left-[260px] w-64" : "bottom-[5px] left-[70px] w-64"
               )}
             >
               <Button
-                onClick={signOut}
+                onClick={() => {
+                  setIsSigningOut(true)
+                  signOut()
+                }}
+                disabled={isSigningOut}
                 variant="ghost"
-                className="flex items-center w-full p-2 text-white font-poppins uppercase tracking-wider hover:bg-black/70 hover:text-white rounded-md transition"
+                className={cn(
+                  "flex items-center w-full p-2 text-white font-poppins uppercase tracking-wider hover:bg-black/40 hover:text-white rounded-md transition",
+                  isSigningOut ? "cursor-not-allowed" : "cursor-pointer"
+                )}
               >
-                <LogOut className="h-5 w-5 mr-2" />
+                {isSigningOut ? (
+                  <Loader2 className="animate-spin text-white" size={20} />
+                ) : (
+                  <LogOut className="h-5 w-5 mr-2" />
+                )}
                 <span>Sign Out</span>
               </Button>
             </motion.div>

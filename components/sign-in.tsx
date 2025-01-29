@@ -2,27 +2,32 @@ import { Button } from "@/components/ui/button";
 import GoogleLogo from "@/components/google-logo";
 import { signInWithGoogle } from "@/utils/utils";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
-import { ArrowRight, LayoutDashboard, Loader2, LogOut } from "lucide-react"; 
+import { useState } from "react";
+import { LayoutDashboard, Loader2, LogIn, LogOut } from "lucide-react"; 
 import { useRouter } from "next/navigation";
 
 export default function SignIn() {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const [signingIn, setSigningIn] = useState(false);
-  const [justSignedIn, setJustSignedIn] = useState(false);
-
-  useEffect(() => {
-    if (justSignedIn && user) {
-      router.push("/dashboard");
-    }
-  }, [user, justSignedIn, router]);
+  const [signingOut, setSigningOut] = useState(false);
+  const [navigating, setNavigating] = useState(false);
 
   const handleSignIn = async () => {
     setSigningIn(true);
-    setJustSignedIn(true);
     await signInWithGoogle();
     setSigningIn(false);
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await signOut();
+    setSigningOut(false);
+  };
+
+  const handleNavigate = async () => {
+    setNavigating(true);
+    router.push("/dashboard");
   };
 
   return (
@@ -53,18 +58,28 @@ export default function SignIn() {
             </p>
 
             <Button
-              onClick={() => router.push("/dashboard")}
+              onClick={handleNavigate}
+              disabled={navigating}
               className="relative z-25 font-main bg-white/95 w-full text-forest hover:bg-white/90 text-lg h-12 px-8 rounded-full group"
             >
-              <LayoutDashboard className="mr-2 h-4 w-4" />
+              {navigating ? (
+                <Loader2 className="animate-spin text-forest" size={20} />
+              ) : (
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+              )}
               Dashboard
             </Button>
 
             <Button
-              onClick={signOut}
+              onClick={handleSignOut}
+              disabled={signingOut}
               className="mt-4 relative z-25 font-main bg-red-800/95 w-full text-white hover:bg-red-800/90 text-lg h-12 px-8 rounded-full group"
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              {signingOut ? (
+                <Loader2 className="animate-spin text-white" size={20} />
+              ) : (
+                <LogOut className="mr-2 h-4 w-4" />
+              )}
               Sign Out
             </Button>
           </>
@@ -78,7 +93,7 @@ export default function SignIn() {
               onClick={handleSignIn}
               disabled={signingIn}
               className={`relative z-25 text-md w-full flex items-center justify-center h-12 rounded-full shadow-sm 
-                ${signingIn ? "bg-gray-300 cursor-not-allowed" : "bg-gray-100 hover:bg-gray-200 text-forest"}
+                ${signingIn ? "bg-gray-100 cursor-not-allowed text-forest" : "bg-gray-100 hover:bg-gray-200 text-forest"}
               `}
             >
               {signingIn ? (
@@ -86,11 +101,11 @@ export default function SignIn() {
               ) : (
                 <>
                   <GoogleLogo className="h-5 w-5 z-25" />
-                  <span className="tracking-tighter z-25 ml-2">
-                    Sign In With Google
-                  </span>
                 </>
               )}
+                <span className="tracking-tighter z-25 ml-2">
+                    Sign In With Google
+                </span>
             </Button>
           </>
         )}
