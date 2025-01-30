@@ -6,7 +6,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-screen  font-poppins relative">
+    <div className="flex h-screen  font-dm relative">
       <RetractableSidebar />
       <main className="flex-1 overflow-y-auto">{children}</main>
     </div>

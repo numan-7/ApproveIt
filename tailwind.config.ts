@@ -59,7 +59,7 @@ const config: Config = {
       },
       fontFamily: {
         main: ["var(--font-playfair-display)", "serif"],
-        poppins: ["var(--font-poppins)", "sans-serif"],
+        dm: ["var(--font-dm)", "sans-serif"],
         sans: ["var(--font-playfair-display)", "serif"],
       },
       keyframes: {

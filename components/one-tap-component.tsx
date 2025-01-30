@@ -1,9 +1,9 @@
 'use client'
 // https://supabase.com/docs/guides/auth/social-login/auth-google?queryGroups=environment&environment=client
-import Script from 'next/script'
-import createClientForBrowser from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import Script from 'next/script';
+import createClientForBrowser from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const OneTapComponent = () => {
   const supabase = createClientForBrowser()

@@ -156,7 +156,7 @@ export function RetractableSidebar() {
 
       {/* User Menu */}
       {user && (
-        <div className="relative mt-auto z-20 border-t-2 border-white/50 font-poppins tracking-wider">
+        <div className="relative mt-auto z-20 border-t-2 border-white/50 font-dm tracking-wider">
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
             className={cn(
@@ -183,9 +183,9 @@ export function RetractableSidebar() {
           {/* Floating Sign Out Menu */}
           {isUserMenuOpen && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.96 }} 
+              initial={{ opacity: 0, scale: 1.01 }} 
               animate={{ opacity: 1, scale: 1 }}   
-              transition={{ duration: 0.1, ease: "easeOut" }} 
+              transition={{ duration: 0.1, ease: "easeIn" }} 
               className={cn(
                 "absolute bg-black/30 rounded-lg shadow-lg transition-all",
                 isExpanded ? "bottom-[5px] left-[260px] w-64" : "bottom-[5px] left-[70px] w-64"
@@ -199,7 +199,7 @@ export function RetractableSidebar() {
                 disabled={isSigningOut}
                 variant="ghost"
                 className={cn(
-                  "flex items-center w-full p-2 text-white font-poppins uppercase tracking-wider hover:bg-black/40 hover:text-white rounded-md transition",
+                  "flex items-center w-full p-2 text-white font-dm uppercase tracking-wider hover:bg-black/40 hover:text-white rounded-md transition",
                   isSigningOut ? "cursor-not-allowed" : "cursor-pointer"
                 )}
               >
