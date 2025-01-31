@@ -57,7 +57,7 @@ export function RetractableSidebar() {
   return (
     <div
       className={cn(
-        "flex flex-col relative z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50",
+        "fixed top-0 left-0 h-screen flex flex-col z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50",
         isExpanded ? "w-64" : "w-16",
       )}
       style={{
@@ -115,7 +115,7 @@ export function RetractableSidebar() {
                       <>
                         <span className="flex-1 text-left">{item.label}</span>
                         <ChevronDown
-                          className={cn("h-4 w-4 transition-transform", isApprovalsExpanded && "transform rotate-180")}
+                          className={cn("h-4 w-4 transition-transform", isApprovalsExpanded && "rotate-180")}
                         />
                       </>
                     )}
@@ -144,7 +144,7 @@ export function RetractableSidebar() {
           ))}
         </ul>
       </nav>
-      
+
       {/* Toggle Sidebar Button */}
       {!isExpanded && (
         <div className="flex justify-center p-4 mt-auto z-20">
@@ -167,17 +167,14 @@ export function RetractableSidebar() {
             <img
               src={user?.user_metadata?.avatar_url || "/sidebar_background.webp"}
               alt="User Avatar"
-              className={cn(
-                "h-8 w-8 rounded-sm mr-2",
-                !isExpanded && "mr-0"
-              )}
+              className={cn("h-8 w-8 rounded-sm mr-2", !isExpanded && "mr-0")}
             />
-            {isExpanded && 
+            {isExpanded && (
               <>
                 <span className="text-sm truncate">{user?.email}</span>
                 <ChevronsUpDown className="h-5 w-5 ml-auto" />
               </>
-            } 
+            )}
           </button>
 
           {/* Floating Sign Out Menu */}
