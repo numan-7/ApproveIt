@@ -62,7 +62,7 @@ export function RetractableSidebar() {
       )}
       style={{
         backgroundImage:
-          'url("https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sidebar_background_2.jpg-sN6DJdrmhxfBgom7UawWbmI8R4Nqdq.jpeg")',
+          'url("/sidebar_background_2.jpg")',
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -88,6 +88,7 @@ export function RetractableSidebar() {
       <nav className="flex-1 z-20">
         <ul className="space-y-2 px-2">
           {menuItems.map((item) => (
+            
             <li key={item.label}>
               {item.href ? (
                 <Link

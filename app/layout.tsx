@@ -8,9 +8,9 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 const dm_sans = DM_Sans({
   subsets: ["latin"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-dm",
   display: "swap",
-})
+  variable: "--font-dm"
+});
 
 export const metadata: Metadata = {
   title: "approve it",
