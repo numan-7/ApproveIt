@@ -51,7 +51,11 @@ export default function PendingApprovals() {
       <h1 className="text-3xl font-bold mb-4">Pending My Approval</h1>
 
       <div className="flex-grow">
-        <ApprovalTable approvals={pendingApprovals} currentPage={currentPage} itemsPerPage={ITEMS_PER_PAGE} />
+        <ApprovalTable 
+          approvals={pendingApprovals} 
+          currentPage={currentPage} 
+          itemsPerPage={ITEMS_PER_PAGE} 
+        />
       </div>
 
       <div className="mt-auto pt-4">

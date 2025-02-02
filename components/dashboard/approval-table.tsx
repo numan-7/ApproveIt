@@ -1,7 +1,16 @@
 import React from "react"
 import Link from "next/link"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Ban, Check, X, Pencil } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"  
 import type { Approval } from "@/types/approval"
 
 interface ApprovalTableProps {
@@ -37,30 +46,60 @@ export function ApprovalTable({ approvals, currentPage, itemsPerPage }: Approval
           <TableHead className="w-1/6">Approver</TableHead>
           <TableHead className="w-1/6">Date</TableHead>
           <TableHead className="w-1/12">Priority</TableHead>
-          <TableHead className="w-1/12">Status</TableHead>
+          <TableHead className="w-1/6">Quick Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {displayedApprovals.map((approval) => (
-          <TableRow key={approval.id}>
-            <TableCell className="truncate max-w-[150px]">
-              <Link href={`/dashboard/approval/${approval.id}`} className="text-blue-600 hover:underline">
+          <TableRow key={approval.id} className="py-0">
+            <TableCell className="truncate max-w-[150px] py-0">
+              <Link
+                href={`/dashboard/approval/${approval.id}`}
+                className="text-blue-600 hover:underline"
+              >
                 {approval.name}
               </Link>
             </TableCell>
-            <TableCell className="truncate max-w-[150px]">{approval.requester}</TableCell>
-            <TableCell className="truncate max-w-[150px]">{approval.approver}</TableCell>
-            <TableCell className="truncate max-w-[150px]">{approval.date}</TableCell>
-            <TableCell>
+            <TableCell className="truncate max-w-[150px] py-1">{approval.requester}</TableCell>
+            <TableCell className="truncate max-w-[150px] py-0">{approval.approver}</TableCell>
+            <TableCell className="truncate max-w-[150px] py-0">{approval.date}</TableCell>
+            <TableCell className="py-0">
               <Badge variant="outline" className={getPriorityColor(approval.priority)}>
-                {approval.priority.charAt(0).toUpperCase() + approval.priority.slice(1)}
+                {approval.priority}
               </Badge>
             </TableCell>
-            <TableCell className="truncate max-w-[150px]">{approval.status}</TableCell>
+            <TableCell className="truncate max-w-[150px] py-0">
+              {approval.requester === "You" ? (
+                <div className="flex items-center space-x-2">
+                    <Badge
+                      className="cursor-pointer  text-white px-2 py-0.5"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Badge>
+                    <Badge
+                      className="cursor-pointer bg-red-500 hover:bg-red-600 text-white px-2 py-0.5"
+                    >
+                      <X className="w-4 h-4" />
+                    </Badge>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Badge
+                    className="cursor-pointer bg-emerald-800 hover:bg-emerald-700 text-white px-2 py-0.5"
+                  >
+                    <Check className="w-4 h-4" />
+                  </Badge>
+                  <Badge
+                    className="cursor-pointer bg-red-500 hover:bg-red-600 text-white px-2 py-0.5"
+                  >
+                    <X className="w-4 h-4" />
+                  </Badge>
+              </div>
+              )}
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
   )
 }
-
