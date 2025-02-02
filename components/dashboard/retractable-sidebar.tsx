@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Home,
@@ -26,10 +26,11 @@ export function RetractableSidebar() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const pathname = usePathname();
   const { user, signOut } = useAuth();
+  
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   const toggleSidebar = () => {
-    const newState = !isExpanded;
-    setIsExpanded(newState);
+    setIsExpanded((prev) => !prev);
   };
 
   const handleApprovalsClick = () => {
@@ -54,15 +55,32 @@ export function RetractableSidebar() {
     },
   ];
 
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        isExpanded &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target as Node)
+      ) {
+        setIsExpanded(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [isExpanded]);
+
   return (
     <div
+      ref={sidebarRef}
       className={cn(
         "fixed top-0 left-0 h-screen flex flex-col z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50",
         isExpanded ? "w-64" : "w-16",
       )}
       style={{
-        backgroundImage:
-          'url("/sidebar_background_2.jpg")',
+        backgroundImage: 'url("/sidebar_background_2.jpg")',
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -191,8 +209,8 @@ export function RetractableSidebar() {
             >
               <Button
                 onClick={() => {
-                  setIsSigningOut(true)
-                  signOut()
+                  setIsSigningOut(true);
+                  signOut();
                 }}
                 disabled={isSigningOut}
                 variant="ghost"
