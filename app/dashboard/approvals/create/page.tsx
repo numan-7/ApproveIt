@@ -1,4 +1,4 @@
-import { ApprovalForm } from "@/components/dashboard/approval-form"
+import { ApprovalForm } from "@/components/dashboard/approval-form";
 
 export default function CreateApproval() {
   return (

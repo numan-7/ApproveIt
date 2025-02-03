@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
-import GoogleLogo from "@/components/google-logo";
-import { signInWithGoogle } from "@/utils/utils";
-import { useAuth } from "@/context/AuthContext";
-import { useState } from "react";
-import { LayoutDashboard, Loader2, LogIn, LogOut } from "lucide-react"; 
-import { useRouter } from "next/navigation";
+import { Button } from '@/components/ui/button';
+import GoogleLogo from '@/components/google-logo';
+import { signInWithGoogle } from '@/utils/utils';
+import { useAuth } from '@/context/AuthContext';
+import { useState } from 'react';
+import { LayoutDashboard, Loader2, LogIn, LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function SignIn() {
   const { user, loading, signOut } = useAuth();
@@ -27,7 +27,7 @@ export default function SignIn() {
 
   const handleNavigate = async () => {
     setNavigating(true);
-    router.push("/dashboard");
+    router.push('/dashboard');
   };
 
   return (
@@ -93,7 +93,7 @@ export default function SignIn() {
               onClick={handleSignIn}
               disabled={signingIn}
               className={`relative z-25 text-md w-full flex items-center justify-center h-12 rounded-full shadow-sm 
-                ${signingIn ? "bg-gray-100 cursor-not-allowed text-forest" : "bg-gray-100 hover:bg-gray-200 text-forest"}
+                ${signingIn ? 'bg-gray-100 cursor-not-allowed text-forest' : 'bg-gray-100 hover:bg-gray-200 text-forest'}
               `}
             >
               {signingIn ? (
@@ -103,9 +103,9 @@ export default function SignIn() {
                   <GoogleLogo className="h-5 w-5 z-25" />
                 </>
               )}
-                <span className="tracking-tighter z-25 ml-2">
-                    Sign In With Google
-                </span>
+              <span className="tracking-tighter z-25 ml-2">
+                Sign In With Google
+              </span>
             </Button>
           </>
         )}

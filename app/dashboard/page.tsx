@@ -1,8 +1,8 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, ClipboardList, CheckSquare } from "lucide-react"
-import { SummaryCards } from "@/components/dashboard/summary-cards"
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlusCircle, ClipboardList, CheckSquare } from "lucide-react";
+import { SummaryCards } from "@/components/dashboard/summary-cards";
 
 export default function Dashboard() {
   return (

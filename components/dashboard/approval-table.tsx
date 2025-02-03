@@ -1,8 +1,8 @@
-"use client"
+'use client';
 
-import React, { useState } from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Table,
   TableBody,
@@ -10,80 +10,114 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Ban, Check, X, Pencil, Search, Filter } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import type { Approval } from "@/types/approval"
+} from '@/components/ui/table';
+import { Pencil, Check, X, Search, Filter } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { useMyApprovals } from '@/hooks/useMyApprovals';
+import type { Approval } from '@/types/approval';
 
 interface ApprovalTableProps {
-  approvals: Approval[]
-  currentPage: number
-  itemsPerPage: number
+  approvals?: Approval[];
+  currentPage: number;
+  itemsPerPage: number;
 }
 
-export function ApprovalTable({ approvals, currentPage, itemsPerPage }: ApprovalTableProps) {
-  const [search, setSearch] = useState("")
-  const [priorityFilter, setPriorityFilter] = useState("")
+export function ApprovalTable({
+  approvals: propApprovals,
+  currentPage,
+  itemsPerPage,
+}: ApprovalTableProps) {
+  const approvals = propApprovals || [];
+  const [search, setSearch] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useAuth();
 
-  const pathname = usePathname()
-  const isMyRequests = pathname.includes("/dashboard/approvals/my-requests")
-  const isPendingApprovals = pathname.includes("/dashboard/approvals/pending")
+  const isMyRequests = pathname.includes('/dashboard/approvals/my-requests');
+  const isPendingApprovals = pathname.includes('/dashboard/approvals/pending');
 
   const filteredApprovals = approvals.filter((approval) => {
-    const matchesSearch = approval.name.toLowerCase().includes(search.toLowerCase())
-    const matchesPriority = priorityFilter === "" || approval.priority === priorityFilter
-    return matchesSearch && matchesPriority
-  })
+    const matchesSearch = approval.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    const matchesPriority =
+      priorityFilter === '' || approval.priority === priorityFilter;
+    return matchesSearch && matchesPriority;
+  });
 
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const endIndex = startIndex + itemsPerPage
-  const displayedApprovals = filteredApprovals.slice(startIndex, endIndex)
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const displayedApprovals = filteredApprovals.slice(startIndex, endIndex);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "bg-red-100 text-red-800 border-red-200"
-      case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "low":
-        return "bg-green-100 text-green-800 border-green-200"
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200';
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
   const toggleSelectOne = (id: number) => {
     if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id))
+      setSelectedIds(selectedIds.filter((selectedId) => selectedId !== id));
     } else {
-      setSelectedIds([...selectedIds, id])
+      setSelectedIds([...selectedIds, id]);
     }
-  }
+  };
 
-  
   const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      const newIds = displayedApprovals.map((a) => a.id)
-      setSelectedIds((prev) => Array.from(new Set([...prev, ...newIds])))
+      const newIds = displayedApprovals.map((a) => a.id);
+      setSelectedIds(Array.from(new Set([...selectedIds, ...newIds])));
     } else {
-      setSelectedIds((prev) => prev.filter((id) => !displayedApprovals.some((a) => a.id === id)))
+      setSelectedIds(
+        selectedIds.filter((id) => !displayedApprovals.some((a) => a.id === id))
+      );
     }
-  }
+  };
 
   const handleEdit = () => {
-    console.log("god i dont wanna implemtn this editnig shit", selectedIds)
-  }
+    if (selectedIds.length === 1) {
+      const approvalToEdit = approvals.find((a) => a.id === selectedIds[0]);
+      const userEmail = user?.email;
+      if (approvalToEdit && approvalToEdit.requester === userEmail) {
+        router.push(`/dashboard/approvals/create?edit=${approvalToEdit.id}`);
+      } else {
+        console.log('Approval not editable.');
+      }
+    }
+  };
+
+  const { deleteApproval } = useMyApprovals();
 
   const handleDelete = () => {
-    console.log("bye bye ", selectedIds)
-  }
-
-  const handleApprove = () => {
-    console.log("approv ethis ho", selectedIds)
-  }
+    if (selectedIds.length === 0) return;
+    const userEmail = user?.email;
+    const deletableIds = selectedIds.filter((id) => {
+      const approval = approvals.find((a) => a.id === id);
+      return approval?.requester === userEmail;
+    });
+    if (deletableIds.length === 0) {
+      console.log('No approvals available to delete.');
+      return;
+    }
+    if (confirm('Are you sure you want to delete the selected approval(s)?')) {
+      deleteApproval(deletableIds);
+      setSelectedIds([]);
+      // used instead of router cause router wasn't updating the table
+      location.reload();
+    }
+  };
 
   return (
     <div>
@@ -114,7 +148,11 @@ export function ApprovalTable({ approvals, currentPage, itemsPerPage }: Approval
         </div>
 
         <div className="w-full md:min-w-[220px]">
-          <div className={`flex items-center space-x-2 ${selectedIds.length > 0 ? "visible" : "invisible"}`}>
+          <div
+            className={`flex items-center space-x-2 ${
+              selectedIds.length > 0 ? 'visible' : 'invisible'
+            }`}
+          >
             {isMyRequests && selectedIds.length === 1 && (
               <Button
                 onClick={handleEdit}
@@ -126,25 +164,38 @@ export function ApprovalTable({ approvals, currentPage, itemsPerPage }: Approval
               </Button>
             )}
             {isPendingApprovals && selectedIds.length > 0 && (
+              <>
+                <Button
+                  onClick={() => {}}
+                  size="sm"
+                  variant="outline"
+                  className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
+                >
+                  <Check className="w-4 h-4" />
+                  Approve
+                </Button>
+                <Button
+                  onClick={() => {}}
+                  size="sm"
+                  variant="destructive"
+                  className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
+                >
+                  <X className="w-4 h-4" />
+                  Deny
+                </Button>
+              </>
+            )}
+            {isMyRequests && (
               <Button
-                onClick={handleApprove}
+                onClick={handleDelete}
                 size="sm"
-                variant="outline"
-                className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
+                variant="destructive"
+                className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
               >
-                <Check className="w-4 h-4" />
-                Approve
+                <X className="w-4 h-4" />
+                Delete
               </Button>
             )}
-            <Button
-              onClick={handleDelete}
-              size="sm"
-              variant="destructive"
-              className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
-            >
-              <X className="w-4 h-4" />
-              Delete
-            </Button>
           </div>
         </div>
       </div>
@@ -165,9 +216,10 @@ export function ApprovalTable({ approvals, currentPage, itemsPerPage }: Approval
               </TableHead>
               <TableHead className="w-1/4">Name</TableHead>
               <TableHead className="w-1/6">Requester</TableHead>
-              <TableHead className="w-1/6">Approver</TableHead>
+              <TableHead className="w-1/6">Approvers</TableHead>
               <TableHead className="w-1/6">Date</TableHead>
               <TableHead className="w-1/12">Priority</TableHead>
+              <TableHead className="w-1/12">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -182,7 +234,7 @@ export function ApprovalTable({ approvals, currentPage, itemsPerPage }: Approval
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
                   <Link
-                    href={`/dashboard/approval/${approval.id}`}
+                    href={`/dashboard/approval/${approval.id}?type=${approval.requester === user?.email ? btoa('my-requests') : btoa('pending')}`}
                     className="text-blue-600 hover:underline"
                   >
                     {approval.name}
@@ -192,15 +244,21 @@ export function ApprovalTable({ approvals, currentPage, itemsPerPage }: Approval
                   {approval.requester}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.approver}
+                  {approval.approvers.join(', ')}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
                   {approval.date}
                 </TableCell>
                 <TableCell className="py-0">
-                  <Badge variant="outline" className={getPriorityColor(approval.priority)}>
+                  <Badge
+                    variant="outline"
+                    className={getPriorityColor(approval.priority)}
+                  >
                     {approval.priority}
                   </Badge>
+                </TableCell>
+                <TableCell className="truncate max-w-[150px] py-0">
+                  {approval.status}
                 </TableCell>
               </TableRow>
             ))}
@@ -208,5 +266,5 @@ export function ApprovalTable({ approvals, currentPage, itemsPerPage }: Approval
         </Table>
       </div>
     </div>
-  )
+  );
 }
