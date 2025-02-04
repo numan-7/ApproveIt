@@ -25,7 +25,7 @@ export function RetractableSidebar() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const pathname = usePathname();
-  const { user, signOut } = useAuth();
+  const { user, loading, signOut } = useAuth();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -215,7 +215,7 @@ export function RetractableSidebar() {
       )}
 
       {/* User Menu */}
-      {user && (
+      {user ? (
         <div className="relative mt-auto z-20 border-t-2 border-white/50 font-dm tracking-wider">
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
@@ -273,6 +273,11 @@ export function RetractableSidebar() {
               </Button>
             </motion.div>
           )}
+        </div>
+      ) : (
+        // Skeleton Loader
+        <div className="flex flex-col items-center w-full mt-auto p-2 border-t-2 z-20">
+          <div className="h-8 w-8 bg-white/70 rounded-sm animate-pulse" />
         </div>
       )}
     </div>

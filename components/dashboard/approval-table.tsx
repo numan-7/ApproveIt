@@ -122,7 +122,7 @@ export function ApprovalTable({
   return (
     <div>
       <div className="flex flex-col md:flex-row justify-start items-center gap-2 mb-4">
-        <div className="relative w-full md:w-64">
+        <div className="relative w-full md:w-72">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4" />
           <input
             type="text"
@@ -214,10 +214,10 @@ export function ApprovalTable({
                   }
                 />
               </TableHead>
-              <TableHead className="w-1/4">Name</TableHead>
+              <TableHead className="w-1/6">Name</TableHead>
               <TableHead className="w-1/6">Requester</TableHead>
               <TableHead className="w-1/6">Approvers</TableHead>
-              <TableHead className="w-1/6">Date</TableHead>
+              <TableHead className="w-1/12">Date</TableHead>
               <TableHead className="w-1/12">Priority</TableHead>
               <TableHead className="w-1/12">Status</TableHead>
             </TableRow>

@@ -5,6 +5,7 @@ import Footer from '@/components/footer';
 import Hero from '@/components/hero';
 import { useState, useEffect } from 'react';
 import { pendingDataApprovals } from '@/data/pending-approvals';
+import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
@@ -22,6 +23,8 @@ export default function Home() {
       }
     }
   }, [authLoading, user]);
+
+  if(authLoading) return <SpinnerLoader />
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const openSidebar = () => setIsSidebarOpen(true);
