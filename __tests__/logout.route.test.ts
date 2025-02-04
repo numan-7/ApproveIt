@@ -1,6 +1,6 @@
 // __tests__/app/auth/logout.route.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET } from '../app/auth/logout/route';
+import { GET } from '@/app/auth/logout/route';
 import { NextResponse } from 'next/server';
 
 const mockSignOutSuccess = async () => ({ error: null });
