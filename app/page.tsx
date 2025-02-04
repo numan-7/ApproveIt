@@ -10,7 +10,8 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
-
+  if(authLoading) return <SpinnerLoader />
+  
   useEffect(() => {
     if (!authLoading && user) {
       const pendingKey = `pendingApprovals_${user.email}`;
@@ -24,7 +25,6 @@ export default function Home() {
     }
   }, [authLoading, user]);
 
-  if(authLoading) return <SpinnerLoader />
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const openSidebar = () => setIsSidebarOpen(true);
