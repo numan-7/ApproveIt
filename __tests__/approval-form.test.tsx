@@ -1,10 +1,8 @@
-// __tests__/components/dashboard/approval-form.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ApprovalForm } from '@/components/dashboard/approval-form';
 import { vi, it, describe, expect } from 'vitest';
 
-// Mock Next.js navigation hooks
 const pushMock = vi.fn();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
@@ -13,7 +11,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(''),
 }));
 
-// Stub the global ResizeObserver (used by some UI components)
+// Stub the global ResizeObserver
 const ResizeObserverMock = vi.fn(() => ({
   observe: vi.fn(),
   unobserve: vi.fn(),

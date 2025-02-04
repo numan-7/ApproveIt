@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GET } from '../app/auth/callback/route';
-import { NextResponse } from 'next/server';
+import { GET } from '@/app/auth/callback/route';
 
 const mockExchangeSuccess = async (code: string) => ({ error: null });
 const mockExchangeFailure = async (code: string) => ({
