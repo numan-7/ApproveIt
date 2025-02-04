@@ -15,11 +15,11 @@ export interface Approval {
   id: number;
   name: string;
   requester: string;
-  approver: string;
+  approvers: string[];
   date: string;
   description: string;
-  status: "pending" | "approved" | "rejected";
-  priority: "high" | "medium" | "low";
+  status: 'pending' | 'approved' | 'rejected';
+  priority: 'high' | 'medium' | 'low';
   comments: Comment[];
   attachments: Attachment[];
   expanded?: boolean;

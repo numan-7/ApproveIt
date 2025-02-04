@@ -1,14 +1,29 @@
-"use client";
+'use client';
 
-import Header from "@/components/header";
-import Footer from "@/components/footer";
-import Hero from "@/components/hero";
-import { useState } from "react";
-import { createClientForServer } from "@/utils/supabase/server";
+import Header from '@/components/header';
+import Footer from '@/components/footer';
+import Hero from '@/components/hero';
+import { useState, useEffect } from 'react';
+import { pendingDataApprovals } from '@/data/pending-approvals';
+import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const { user, loading: authLoading } = useAuth();
 
+  useEffect(() => {
+    if (!authLoading && user) {
+      const pendingKey = `pendingApprovals_${user.email}`;
+      const myKey = `myApprovals_${user.email}`;
+      if (localStorage.getItem(pendingKey) === null) {
+        localStorage.setItem(pendingKey, JSON.stringify(pendingDataApprovals));
+      }
+      if (localStorage.getItem(myKey) === null) {
+        localStorage.setItem(myKey, JSON.stringify([]));
+      }
+    }
+  }, [authLoading, user]);
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const openSidebar = () => setIsSidebarOpen(true);
   const closeSidebar = () => setIsSidebarOpen(false);
 

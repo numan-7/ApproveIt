@@ -1,5 +1,5 @@
 interface GoogleLogoProps {
-  className?: string; 
+  className?: string;
 }
 
 const GoogleLogo = ({ className }: GoogleLogoProps): JSX.Element => {

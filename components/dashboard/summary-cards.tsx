@@ -1,11 +1,20 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 interface SummaryCardsProps {
-  myRequestsCount: number
-  pendingApprovalsCount: number
+  myRequestsCount: number;
+  pendingApprovalsCount: number;
 }
 
-export function SummaryCards({ myRequestsCount, pendingApprovalsCount }: SummaryCardsProps) {
+export function SummaryCards({
+  myRequestsCount,
+  pendingApprovalsCount,
+}: SummaryCardsProps) {
   return (
     <div className="grid gap-8 md:grid-cols-2">
       <Card>
@@ -32,11 +41,13 @@ export function SummaryCards({ myRequestsCount, pendingApprovalsCount }: Summary
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium">Total Pending</span>
-              <span className="text-2xl font-bold">{pendingApprovalsCount}</span>
+              <span className="text-2xl font-bold">
+                {pendingApprovalsCount}
+              </span>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,11 +1,16 @@
-"use client";
+'use client';
 
-import { motion } from "framer-motion";
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import SignIn from "@/components/sign-in";
-import Link from "next/link";
+import { motion } from 'framer-motion';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import { Menu, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import SignIn from '@/components/sign-in';
+import Link from 'next/link';
 
 interface HeaderProps {
   isSidebarOpen: boolean;
@@ -20,7 +25,7 @@ const containerVariants = {
     y: 0,
     transition: {
       duration: 0.5,
-      ease: "easeOut",
+      ease: 'easeOut',
     },
   },
 };
@@ -53,9 +58,15 @@ export default function Header({
           <span className="sr-only">Open menu</span>
         </Button>
 
-        <Sheet open={isSidebarOpen} onOpenChange={(isOpen) => (isOpen ? openSidebar() : closeSidebar())}>
+        <Sheet
+          open={isSidebarOpen}
+          onOpenChange={(isOpen) => (isOpen ? openSidebar() : closeSidebar())}
+        >
           <SheetContent className="ring-0 border-0 focus-visible:ring-offset-0 focus-visible:ring-0 w-full sm:w-[540px] p-0 backdrop-blur-md bg-white">
-            <SheetDescription className="sr-only">This sidebar allows you to sign in to ApproveIt and manage approvals effortlessly.</SheetDescription>
+            <SheetDescription className="sr-only">
+              This sidebar allows you to sign in to ApproveIt and manage
+              approvals effortlessly.
+            </SheetDescription>
             <SheetTitle className="sr-only">Sign In</SheetTitle>
 
             <Button
