@@ -1,6 +1,6 @@
 import type { Approval } from '@/types/approval';
 
-export const pendingDataApprovals: Approval[] = [
+export const DataApprovals: Approval[] = [
   {
     id: 3,
     name: 'HR Policy Update',
