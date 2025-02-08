@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useMyApprovals } from '@/hooks/useMyApprovals';
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import type { Approval } from '@/types/approval';
 
 interface ApprovalTableProps {
@@ -99,20 +100,28 @@ export function ApprovalTable({
   };
 
   const { deleteApproval } = useMyApprovals();
+  const { approveApproval, denyApproval } = usePendingApprovals();
 
-  const handleDelete = () => {
+  const handleAction = (action: 'approve' | 'deny' | 'delete') => {
     if (selectedIds.length === 0) return;
     const userEmail = user?.email;
-    const deletableIds = selectedIds.filter((id) => {
+    const actionIds = selectedIds.filter((id) => {
       const approval = approvals.find((a) => a.id === id);
       return approval?.requester === userEmail;
     });
-    if (deletableIds.length === 0) {
-      console.log('No approvals available to delete.');
+    if (actionIds.length === 0) {
+      console.log(`No approvals available to ${action}.`);
       return;
     }
+
     if (confirm('Are you sure you want to delete the selected approval(s)?')) {
-      deleteApproval(deletableIds);
+      if (action === 'approve') {
+        approveApproval(actionIds);
+      } else if (action === 'deny') {
+        denyApproval(actionIds);
+      } else if (action === 'delete') {
+        deleteApproval(actionIds);
+      }
       setSelectedIds([]);
       // used instead of router cause router wasn't updating the table
       location.reload();
@@ -166,7 +175,7 @@ export function ApprovalTable({
             {isPendingApprovals && selectedIds.length > 0 && (
               <>
                 <Button
-                  onClick={() => {}}
+                  onClick={() => handleAction('approve')}
                   size="sm"
                   variant="outline"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
@@ -175,7 +184,7 @@ export function ApprovalTable({
                   Approve
                 </Button>
                 <Button
-                  onClick={() => {}}
+                  onClick={() => handleAction('deny')}
                   size="sm"
                   variant="destructive"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
@@ -187,7 +196,7 @@ export function ApprovalTable({
             )}
             {isMyRequests && (
               <Button
-                onClick={handleDelete}
+                onClick={() => handleAction('delete')}
                 size="sm"
                 variant="destructive"
                 className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"

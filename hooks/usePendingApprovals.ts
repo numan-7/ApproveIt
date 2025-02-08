@@ -38,30 +38,25 @@ export function usePendingApprovals() {
     }
   }, [approvals, key, loading]);
 
-  const addApproval = (approval: Approval) => {
-    setApprovals((prev) => [...prev, approval]);
-  };
-
   const updateApproval = (id: number, updated: Approval) => {
     setApprovals((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };
 
-  const approveApproval = (id: number) => {
+  const approveApproval = (id: number[]) => {
     setApprovals((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: 'approved' } : a))
+      prev.map((a) => (id.includes(a.id) ? { ...a, status: 'approved' } : a))
     );
   };
 
-  const denyApproval = (id: number) => {
+  const denyApproval = (id: number[]) => {
     setApprovals((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: 'rejected' } : a))
+      prev.map((a) => (id.includes(a.id) ? { ...a, status: 'rejected' } : a))
     );
   };
 
   return {
     approvals,
     loading,
-    addApproval,
     updateApproval,
     approveApproval,
     denyApproval,
