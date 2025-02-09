@@ -104,26 +104,29 @@ export function ApprovalTable({
 
   const handleAction = (action: 'approve' | 'deny' | 'delete') => {
     if (selectedIds.length === 0) return;
-    const userEmail = user?.email;
-    const actionIds = selectedIds.filter((id) => {
-      const approval = approvals.find((a) => a.id === id);
-      return approval?.requester === userEmail;
-    });
-    if (actionIds.length === 0) {
-      console.log(`No approvals available to ${action}.`);
-      return;
+
+    let confirmMessage = '';
+    if (action === 'delete') {
+      confirmMessage =
+        'Are you sure you want to delete the selected approval(s)?';
+    } else if (action === 'approve') {
+      confirmMessage =
+        'Are you sure you want to approve the selected approval(s)?';
+    } else if (action === 'deny') {
+      confirmMessage =
+        'Are you sure you want to deny the selected approval(s)?';
     }
 
-    if (confirm('Are you sure you want to delete the selected approval(s)?')) {
+    if (confirm(confirmMessage)) {
       if (action === 'approve') {
-        approveApproval(actionIds);
+        approveApproval(selectedIds);
       } else if (action === 'deny') {
-        denyApproval(actionIds);
+        denyApproval(selectedIds);
       } else if (action === 'delete') {
-        deleteApproval(actionIds);
+        deleteApproval(selectedIds);
       }
       setSelectedIds([]);
-      // used instead of router because router wasn't updating the table
+      // Reload the page since router wasn't updating the table
       location.reload();
     }
   };
