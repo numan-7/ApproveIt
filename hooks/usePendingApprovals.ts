@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 import { DataApprovals } from '@/data/pending-approvals';
 
-const LOCAL_STORAGE_KEY_PREFIX = 'approvals_';
+const LOCAL_STORAGE_KEY_PREFIX = 'pendingApprovals_';
 
 export function usePendingApprovals() {
   const { user, loading: authLoading } = useAuth();
@@ -27,7 +27,8 @@ export function usePendingApprovals() {
           setApprovals([]);
         }
       } else {
-        setApprovals([]);
+        // If nothing is stored yet, initialize with the default DataApprovals.
+        setApprovals(DataApprovals);
       }
       setLoading(false);
     }
@@ -35,7 +36,7 @@ export function usePendingApprovals() {
 
   useEffect(() => {
     if (!loading) {
-      localStorage.setItem(key, JSON.stringify(DataApprovals));
+      localStorage.setItem(key, JSON.stringify(approvals));
     }
   }, [approvals, key, loading]);
 

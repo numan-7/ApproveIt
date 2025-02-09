@@ -16,7 +16,7 @@ export default function MyRequests() {
 
   return (
     <div className="flex flex-col min-h-screen p-4">
-      <h1 className="text-3xl font-bold mb-4">My Requests</h1>
+      <h1 className="text-3xl font-bold mb-4">Outgoing Approvals</h1>
       <div className="flex-grow">
         <ApprovalTable
           approvals={approvals}

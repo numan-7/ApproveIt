@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 
-const LOCAL_STORAGE_KEY_PREFIX = 'approvals_';
+const LOCAL_STORAGE_KEY_PREFIX = 'myApprovals_';
 
 export function useMyApprovals() {
   const { user, loading: authLoading } = useAuth();
@@ -32,6 +32,13 @@ export function useMyApprovals() {
     }
   }, [authLoading, user, key]);
 
+  // Write changes to localStorage whenever approvals update.
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem(key, JSON.stringify(approvals));
+    }
+  }, [approvals, key, loading]);
+
   const addApproval = (approval: Approval) => {
     setApprovals((prev) => [...prev, approval]);
   };
@@ -40,8 +47,8 @@ export function useMyApprovals() {
     setApprovals((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };
 
-  const deleteApproval = (id: number[]) => {
-    setApprovals((prev) => prev.filter((a) => !id.includes(a.id)));
+  const deleteApproval = (ids: number[]) => {
+    setApprovals((prev) => prev.filter((a) => !ids.includes(a.id)));
   };
 
   return {

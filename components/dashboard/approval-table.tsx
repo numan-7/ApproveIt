@@ -39,8 +39,8 @@ export function ApprovalTable({
   const router = useRouter();
   const { user } = useAuth();
 
-  const isMyRequests = pathname.includes('/dashboard/approvals/my-requests');
-  const isPendingApprovals = pathname.includes('/dashboard/approvals/pending');
+  const isMyRequests = pathname.includes('/dashboard/approvals/outgoing');
+  const isPendingApprovals = pathname.includes('/dashboard/approvals/incoming');
 
   const filteredApprovals = approvals.filter((approval) => {
     const matchesSearch = approval.name
