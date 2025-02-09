@@ -7,12 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, X } from 'lucide-react';
+import { PlusCircle, X, Loader2 } from 'lucide-react';
 import { useMyApprovals } from '@/hooks/useMyApprovals';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval, Attachment } from '@/types/approval';
+import type { FileUpload } from '@/types/files';
 import { SpinnerLoader } from '../ui/spinner-loader';
 import { Badge } from '@/components/ui/badge';
+import { twMerge } from 'tailwind-merge';
+
+import { UploadButton } from '@/utils/uploadthing/uploadthing';
 
 type Approver = {
   email: string;
@@ -32,9 +36,9 @@ export function ApprovalForm() {
   const [approvers, setApprovers] = useState<Approver[]>([]);
   const [newApprover, setNewApprover] = useState('');
   const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
-
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [error, setError] = useState<string>('');
+  const [deletingFileKey, setDeletingFileKey] = useState<string | null>(null);
 
   useEffect(() => {
     if (editId) {
@@ -51,21 +55,54 @@ export function ApprovalForm() {
 
   const isLoading = authLoading || loading;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const attachmentsArray: Attachment[] = Array.from(e.target.files).map(
-        (file) => ({
-          name: file.name,
-          type: file.type,
-          size: `${file.size}`,
-          url: file.name,
-        })
-      );
-      setAttachments(attachmentsArray);
+  const handleUploadComplete = (files: FileUpload[]) => {
+    console.log('Uploaded files:', files);
+    const newAttachments: Attachment[] = files.map((file) => ({
+      key: file.key,
+      name: file.name,
+      type: file.type,
+      size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      url: file.url,
+    }));
+    setAttachments((prev) => [...prev, ...newAttachments]);
+  };
+
+  const handleDeleteAttachment = async (attachmentKey: string) => {
+    setDeletingFileKey(attachmentKey);
+    try {
+      if (!editId) {
+        const res = await fetch('/api/uploadthing', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fileKey: attachmentKey }),
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          setError(errData.error || 'Failed to delete attachment');
+          setDeletingFileKey(null);
+          return;
+        }
+      } else {
+        const res = await fetch(
+          `/api/approvals/${editId}/attachment/${attachmentKey}`,
+          { method: 'DELETE' }
+        );
+        if (!res.ok) {
+          const errData = await res.json();
+          setError(errData.error || 'Failed to delete attachment');
+          setDeletingFileKey(null);
+          return;
+        }
+      }
+      setAttachments((prev) => prev.filter((att) => att.key !== attachmentKey));
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setDeletingFileKey(null);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
 
@@ -73,18 +110,16 @@ export function ApprovalForm() {
       setError('Please add at least one approver.');
       return;
     }
-
     if (user?.email && approvers.some((a) => a.email === user.email)) {
       setError('You cannot add yourself as an approver.');
       return;
     }
 
-    const newApproval: Approval = {
-      id: editId ? Number(editId) : Date.now(),
+    const payload: Partial<Approval> = {
       name,
       description,
       requester: user?.email ?? 'unknown',
-      approvers, // now an array of approver objects
+      approvers,
       date: new Date().toLocaleDateString(),
       status: 'pending',
       priority,
@@ -93,9 +128,9 @@ export function ApprovalForm() {
     };
 
     if (editId) {
-      updateApproval(newApproval.id, newApproval);
+      await updateApproval(editId, payload);
     } else {
-      addApproval(newApproval);
+      await addApproval(payload);
     }
     router.push('/dashboard');
   };
@@ -120,7 +155,6 @@ export function ApprovalForm() {
     setApprovers(approvers.filter((a) => a.email !== email));
   };
 
-  // Allow pressing Enter to add an approver.
   const handleApproverKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -184,7 +218,7 @@ export function ApprovalForm() {
                     className="h-auto p-0 ml-2 text-red-700 hover:text-red-700 rounded-sm"
                     onClick={() => removeApprover(approver.email)}
                   >
-                    <X className="h-4 w-4 hover:text-inherit" />
+                    <X className="h-4 w-4" />
                   </Button>
                 </Badge>
               ))}
@@ -216,19 +250,38 @@ export function ApprovalForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="attachments">Attachments</Label>
-            <Input
-              id="attachments"
-              type="file"
-              multiple
-              onChange={handleFileChange}
-            />
-            {attachments.length > 0 && (
-              <ul className="mt-2 list-disc pl-5 text-sm">
-                {attachments.map((file) => (
-                  <li key={file.name}>{file.name}</li>
-                ))}
-              </ul>
-            )}
+            <div className="flex flex-col gap-2">
+              <UploadButton
+                endpoint="imageUploader"
+                onClientUploadComplete={handleUploadComplete}
+                onUploadError={(error: Error) => {
+                  setError(`Upload error: ${error.message}`);
+                }}
+                config={{ cn: twMerge }}
+                className="flex items-start justify-start ut-button:font-dm ut-button:h-9 ut-button:text-sm ut-button:bg-black hover:ut-button:bg-primary/90"
+              />
+              {attachments.length > 0 && (
+                <ul className="list-disc pl-5 text-sm">
+                  {attachments.map((file) => (
+                    <li key={file.key} className="flex items-center gap-2">
+                      {deletingFileKey === file.key ? (
+                        <Loader2 className="animate-spin h-4 w-4 text-red-700" />
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-0 text-red-700 hover:text-red-700"
+                          onClick={() => handleDeleteAttachment(file.key)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <span>{file.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
           <Button type="submit" className="w-full">
             {editId ? 'Update Approval Request' : 'Create Approval Request'}

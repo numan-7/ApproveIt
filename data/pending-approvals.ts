@@ -20,10 +20,11 @@ export const DataApprovals: Approval[] = [
     comments: [],
     attachments: [
       {
+        key: '1',
         name: 'Updated_HR_Policies.pdf',
         type: 'pdf',
         size: '3.1 MB',
-        url: '#',
+        url: 'https://www.fsa.usda.gov/Internet/FSA_File/tech_assist.pdf',
       },
     ],
   },
@@ -52,16 +53,18 @@ export const DataApprovals: Approval[] = [
     ],
     attachments: [
       {
+        key: '1',
         name: 'IT_Upgrade_Proposal.pdf',
         type: 'pdf',
         size: '5.7 MB',
-        url: '#',
+        url: 'https://www.fsa.usda.gov/Internet/FSA_File/tech_assist.pdf',
       },
       {
+        key: '2',
         name: 'Upgrade_Timeline.xlsx',
         type: 'excel',
         size: '1.3 MB',
-        url: '#',
+        url: 'https://www.fsa.usda.gov/Internet/FSA_File/tech_assist.pdf',
       },
     ],
   },

@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClientForServer } from '@/utils/supabase/server';
 
-export async function GET(req: Request) {
+export async function POST(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   const supabase = await createClientForServer();
+  const { id } = params;
   const {
     data: { user },
     error: userError,
@@ -10,24 +14,13 @@ export async function GET(req: Request) {
   if (userError || !user)
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
+  const body = await req.json(); // Expected { comment: string }
+  const { comment } = body;
+
   const { data, error } = await supabase
-    .from('approvals')
-    .select(
-      `
-      id,
-      name,
-      requester,
-      date,
-      description,
-      status,
-      priority,
-      approvers:approvers ( email, name, did_approve ),
-      comments:comments ( user_email, comment, created_at ),
-      attachments:attachments ( name, type, size, url )
-    `
-    )
-    .filter('approvers.email', 'eq', user.email)
-    .order('date', { ascending: true });
+    .from('comments')
+    .insert([{ approval_id: id, user_email: user.email, comment }])
+    .select();
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
