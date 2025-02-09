@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
+import { DataApprovals } from '@/data/pending-approvals';
 
 const LOCAL_STORAGE_KEY_PREFIX = 'pendingApprovals_';
 
@@ -26,7 +27,8 @@ export function usePendingApprovals() {
           setApprovals([]);
         }
       } else {
-        setApprovals([]);
+        // If nothing is stored yet, initialize with the default DataApprovals.
+        setApprovals(DataApprovals);
       }
       setLoading(false);
     }
@@ -38,30 +40,56 @@ export function usePendingApprovals() {
     }
   }, [approvals, key, loading]);
 
-  const addApproval = (approval: Approval) => {
-    setApprovals((prev) => [...prev, approval]);
-  };
-
   const updateApproval = (id: number, updated: Approval) => {
     setApprovals((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };
 
-  const approveApproval = (id: number) => {
+  const approveApproval = (ids: number[] | number) => {
+    const idArr = Array.isArray(ids) ? ids : [ids];
     setApprovals((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: 'approved' } : a))
+      prev.map((a) => {
+        if (idArr.includes(a.id)) {
+          const currentUserEmail = user?.email;
+          if (!currentUserEmail) return a;
+          const newApprovers = a.approvers.map((approver) =>
+            approver.email === currentUserEmail
+              ? { ...approver, didApprove: true }
+              : approver
+          );
+          const allApproved = newApprovers.every((appr) => appr.didApprove);
+          return {
+            ...a,
+            approvers: newApprovers,
+            status: allApproved ? 'approved' : a.status,
+          };
+        }
+        return a;
+      })
     );
   };
 
-  const denyApproval = (id: number) => {
+  const denyApproval = (ids: number[] | number) => {
+    const idArr = Array.isArray(ids) ? ids : [ids];
     setApprovals((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, status: 'rejected' } : a))
+      prev.map((a) => {
+        if (idArr.includes(a.id)) {
+          const currentUserEmail = user?.email;
+          if (!currentUserEmail) return a;
+          const newApprovers = a.approvers.map((approver) =>
+            approver.email === currentUserEmail
+              ? { ...approver, didApprove: false }
+              : approver
+          );
+          return { ...a, approvers: newApprovers, status: 'rejected' };
+        }
+        return a;
+      })
     );
   };
 
   return {
     approvals,
     loading,
-    addApproval,
     updateApproval,
     approveApproval,
     denyApproval,

@@ -1,11 +1,17 @@
 import type { Approval } from '@/types/approval';
 
-export const pendingDataApprovals: Approval[] = [
+export const DataApprovals: Approval[] = [
   {
     id: 3,
     name: 'HR Policy Update',
     requester: 'Jane Smith',
-    approvers: ['numankhan165@gmail.com'],
+    approvers: [
+      {
+        email: 'numankhan165@gmail.com',
+        name: 'Numan Khan',
+        didApprove: false,
+      },
+    ],
     date: '2024-01-28',
     description:
       'Review and approve the updated HR policies for the upcoming fiscal year.',
@@ -25,7 +31,13 @@ export const pendingDataApprovals: Approval[] = [
     id: 4,
     name: 'IT Infrastructure Upgrade Proposal',
     requester: 'Mike Johnson',
-    approvers: ['numankhan165@gmail.com'],
+    approvers: [
+      {
+        email: 'numankhan165@gmail.com',
+        name: 'Numan Khan',
+        didApprove: false,
+      },
+    ],
     date: '2024-01-29',
     description:
       'Approval needed for the proposed IT infrastructure upgrades, including budget and timeline.',

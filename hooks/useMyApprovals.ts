@@ -32,6 +32,7 @@ export function useMyApprovals() {
     }
   }, [authLoading, user, key]);
 
+  // Write changes to localStorage whenever approvals update.
   useEffect(() => {
     if (!loading) {
       localStorage.setItem(key, JSON.stringify(approvals));
@@ -46,8 +47,8 @@ export function useMyApprovals() {
     setApprovals((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };
 
-  const deleteApproval = (id: number[]) => {
-    setApprovals((prev) => prev.filter((a) => !id.includes(a.id)));
+  const deleteApproval = (ids: number[]) => {
+    setApprovals((prev) => prev.filter((a) => !ids.includes(a.id)));
   };
 
   return {

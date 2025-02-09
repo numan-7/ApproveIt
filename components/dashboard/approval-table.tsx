@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { useMyApprovals } from '@/hooks/useMyApprovals';
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import type { Approval } from '@/types/approval';
 
 interface ApprovalTableProps {
@@ -38,8 +39,8 @@ export function ApprovalTable({
   const router = useRouter();
   const { user } = useAuth();
 
-  const isMyRequests = pathname.includes('/dashboard/approvals/my-requests');
-  const isPendingApprovals = pathname.includes('/dashboard/approvals/pending');
+  const isMyRequests = pathname.includes('/dashboard/approvals/outgoing');
+  const isPendingApprovals = pathname.includes('/dashboard/approvals/incoming');
 
   const filteredApprovals = approvals.filter((approval) => {
     const matchesSearch = approval.name
@@ -99,22 +100,33 @@ export function ApprovalTable({
   };
 
   const { deleteApproval } = useMyApprovals();
+  const { approveApproval, denyApproval } = usePendingApprovals();
 
-  const handleDelete = () => {
+  const handleAction = (action: 'approve' | 'deny' | 'delete') => {
     if (selectedIds.length === 0) return;
-    const userEmail = user?.email;
-    const deletableIds = selectedIds.filter((id) => {
-      const approval = approvals.find((a) => a.id === id);
-      return approval?.requester === userEmail;
-    });
-    if (deletableIds.length === 0) {
-      console.log('No approvals available to delete.');
-      return;
+
+    let confirmMessage = '';
+    if (action === 'delete') {
+      confirmMessage =
+        'Are you sure you want to delete the selected approval(s)?';
+    } else if (action === 'approve') {
+      confirmMessage =
+        'Are you sure you want to approve the selected approval(s)?';
+    } else if (action === 'deny') {
+      confirmMessage =
+        'Are you sure you want to deny the selected approval(s)?';
     }
-    if (confirm('Are you sure you want to delete the selected approval(s)?')) {
-      deleteApproval(deletableIds);
+
+    if (confirm(confirmMessage)) {
+      if (action === 'approve') {
+        approveApproval(selectedIds);
+      } else if (action === 'deny') {
+        denyApproval(selectedIds);
+      } else if (action === 'delete') {
+        deleteApproval(selectedIds);
+      }
       setSelectedIds([]);
-      // used instead of router cause router wasn't updating the table
+      // Reload the page since router wasn't updating the table
       location.reload();
     }
   };
@@ -166,7 +178,7 @@ export function ApprovalTable({
             {isPendingApprovals && selectedIds.length > 0 && (
               <>
                 <Button
-                  onClick={() => {}}
+                  onClick={() => handleAction('approve')}
                   size="sm"
                   variant="outline"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
@@ -175,7 +187,7 @@ export function ApprovalTable({
                   Approve
                 </Button>
                 <Button
-                  onClick={() => {}}
+                  onClick={() => handleAction('deny')}
                   size="sm"
                   variant="destructive"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
@@ -187,7 +199,7 @@ export function ApprovalTable({
             )}
             {isMyRequests && (
               <Button
-                onClick={handleDelete}
+                onClick={() => handleAction('delete')}
                 size="sm"
                 variant="destructive"
                 className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
@@ -234,7 +246,11 @@ export function ApprovalTable({
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
                   <Link
-                    href={`/dashboard/approval/${approval.id}?type=${approval.requester === user?.email ? btoa('my-requests') : btoa('pending')}`}
+                    href={`/dashboard/approval/${approval.id}?type=${
+                      approval.requester === user?.email
+                        ? btoa('my-requests')
+                        : btoa('pending')
+                    }`}
                     className="text-blue-600 hover:underline"
                   >
                     {approval.name}
@@ -244,7 +260,12 @@ export function ApprovalTable({
                   {approval.requester}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.approvers.join(', ')}
+                  {approval.approvers
+                    .map(
+                      (approver) =>
+                        `${approver.name}${approver.didApprove ? ' (Approved)' : ''}`
+                    )
+                    .join(', ')}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
                   {approval.date}
