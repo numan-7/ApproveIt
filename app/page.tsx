@@ -3,23 +3,13 @@
 import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Hero from '@/components/hero';
-import { useState, useEffect } from 'react';
-import { DataApprovals } from '@/data/pending-approvals';
+import { useState } from 'react';
 import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import { useAuth } from '@/context/AuthContext';
 
 export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const { user, loading: authLoading } = useAuth();
-
-  useEffect(() => {
-    if (!authLoading && user) {
-      const key = `approvals_${user.email}`;
-      if (!localStorage.getItem(key)) {
-        localStorage.setItem(key, JSON.stringify(DataApprovals));
-      }
-    }
-  }, [authLoading, user]);
+  const { loading: authLoading } = useAuth();
 
   const openSidebar = () => setIsSidebarOpen(true);
   const closeSidebar = () => setIsSidebarOpen(false);

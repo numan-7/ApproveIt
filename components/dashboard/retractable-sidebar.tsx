@@ -51,17 +51,17 @@ export function RetractableSidebar() {
         {
           href: '/dashboard/approvals/create',
           icon: PlusCircle,
-          label: 'Submit New Request',
+          label: 'Submit New Approval',
         },
         {
-          href: '/dashboard/approvals/pending',
+          href: '/dashboard/approvals/incoming',
           icon: CheckCircle,
-          label: 'Review Pending',
+          label: 'Incoming Approvals',
         },
         {
-          href: '/dashboard/approvals/my-requests',
+          href: '/dashboard/approvals/outgoing',
           icon: FileText,
-          label: 'My Requests',
+          label: 'Outgoing Approvals',
         },
       ],
     },

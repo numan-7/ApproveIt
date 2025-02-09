@@ -51,8 +51,6 @@ export function ApprovalTable({
     return matchesSearch && matchesPriority;
   });
 
-  console.log(approvals);
-
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const displayedApprovals = filteredApprovals.slice(startIndex, endIndex);
