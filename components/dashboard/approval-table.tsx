@@ -51,6 +51,8 @@ export function ApprovalTable({
     return matchesSearch && matchesPriority;
   });
 
+  console.log(approvals);
+
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const displayedApprovals = filteredApprovals.slice(startIndex, endIndex);
@@ -123,7 +125,7 @@ export function ApprovalTable({
         deleteApproval(actionIds);
       }
       setSelectedIds([]);
-      // used instead of router cause router wasn't updating the table
+      // used instead of router because router wasn't updating the table
       location.reload();
     }
   };
@@ -243,7 +245,11 @@ export function ApprovalTable({
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
                   <Link
-                    href={`/dashboard/approval/${approval.id}?type=${approval.requester === user?.email ? btoa('my-requests') : btoa('pending')}`}
+                    href={`/dashboard/approval/${approval.id}?type=${
+                      approval.requester === user?.email
+                        ? btoa('my-requests')
+                        : btoa('pending')
+                    }`}
                     className="text-blue-600 hover:underline"
                   >
                     {approval.name}
@@ -253,7 +259,12 @@ export function ApprovalTable({
                   {approval.requester}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.approvers.join(', ')}
+                  {approval.approvers
+                    .map(
+                      (approver) =>
+                        `${approver.name}${approver.didApprove ? ' (Approved)' : ''}`
+                    )
+                    .join(', ')}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
                   {approval.date}

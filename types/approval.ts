@@ -11,11 +11,17 @@ export interface Comment {
   date: string;
 }
 
+interface Approvers {
+  email: string;
+  name: string;
+  didApprove: boolean;
+}
+
 export interface Approval {
   id: number;
   name: string;
   requester: string;
-  approvers: string[];
+  approvers: Approvers[];
   date: string;
   description: string;
   status: 'pending' | 'approved' | 'rejected';

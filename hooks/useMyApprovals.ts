@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 
-const LOCAL_STORAGE_KEY_PREFIX = 'myApprovals_';
+const LOCAL_STORAGE_KEY_PREFIX = 'approvals_';
 
 export function useMyApprovals() {
   const { user, loading: authLoading } = useAuth();
@@ -31,12 +31,6 @@ export function useMyApprovals() {
       setLoading(false);
     }
   }, [authLoading, user, key]);
-
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem(key, JSON.stringify(approvals));
-    }
-  }, [approvals, key, loading]);
 
   const addApproval = (approval: Approval) => {
     setApprovals((prev) => [...prev, approval]);

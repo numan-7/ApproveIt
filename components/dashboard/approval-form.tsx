@@ -1,39 +1,44 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, X } from "lucide-react";
-import { useMyApprovals } from "@/hooks/useMyApprovals";
-import { useAuth } from "@/context/AuthContext";
-import type { Approval } from "@/types/approval";
-import type { Attachment } from "@/types/approval"; 
-import { SpinnerLoader } from "../ui/spinner-loader";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, X } from 'lucide-react';
+import { useMyApprovals } from '@/hooks/useMyApprovals';
+import { useAuth } from '@/context/AuthContext';
+import type { Approval, Attachment } from '@/types/approval';
+import { SpinnerLoader } from '../ui/spinner-loader';
+import { Badge } from '@/components/ui/badge';
+
+type Approver = {
+  email: string;
+  name: string;
+  didApprove: boolean;
+};
 
 export function ApprovalForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const editId = searchParams.get("edit");
+  const editId = searchParams.get('edit');
   const { user, loading: authLoading } = useAuth();
   const { approvals, addApproval, updateApproval, loading } = useMyApprovals();
 
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [approvers, setApprovers] = useState<string[]>([]);
-  const [newApprover, setNewApprover] = useState("");
-  const [priority, setPriority] = useState<"high" | "medium" | "low">("medium");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [approvers, setApprovers] = useState<Approver[]>([]);
+  const [newApprover, setNewApprover] = useState('');
+  const [priority, setPriority] = useState<'high' | 'medium' | 'low'>('medium');
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (editId) {
-      const approvalToEdit = approvals.find(a => a.id === Number(editId));
+      const approvalToEdit = approvals.find((a) => a.id === Number(editId));
       if (approvalToEdit) {
         setName(approvalToEdit.name);
         setDescription(approvalToEdit.description);
@@ -48,27 +53,29 @@ export function ApprovalForm() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const attachmentsArray: Attachment[] = Array.from(e.target.files).map(file => ({
-        name: file.name,
-        type: file.type,
-        size: `${file.size}`, 
-        url: file.name, 
-      }));
+      const attachmentsArray: Attachment[] = Array.from(e.target.files).map(
+        (file) => ({
+          name: file.name,
+          type: file.type,
+          size: `${file.size}`,
+          url: file.name,
+        })
+      );
       setAttachments(attachmentsArray);
     }
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(""); 
+    setError('');
 
     if (approvers.length === 0) {
-      setError("Please add at least one approver.");
+      setError('Please add at least one approver.');
       return;
     }
 
-    if (user?.email && approvers.includes(user.email)) {
-      setError("You cannot add yourself as an approver.");
+    if (user?.email && approvers.some((a) => a.email === user.email)) {
+      setError('You cannot add yourself as an approver.');
       return;
     }
 
@@ -76,13 +83,13 @@ export function ApprovalForm() {
       id: editId ? Number(editId) : Date.now(),
       name,
       description,
-      requester: user?.email ?? "unknown",
-      approvers,
+      requester: user?.email ?? 'unknown',
+      approvers, // now an array of approver objects
       date: new Date().toLocaleDateString(),
-      status: "pending",
+      status: 'pending',
       priority,
       comments: [],
-      attachments, 
+      attachments,
     };
 
     if (editId) {
@@ -90,29 +97,32 @@ export function ApprovalForm() {
     } else {
       addApproval(newApproval);
     }
-    router.push("/dashboard");
+    router.push('/dashboard');
   };
 
   const addApproverHandler = () => {
     if (!newApprover) return;
     if (user && newApprover === user.email) {
-      setError("You cannot add yourself as an approver.");
+      setError('You cannot add yourself as an approver.');
       return;
     }
-    if (!approvers.includes(newApprover)) {
-      setApprovers([...approvers, newApprover]);
-      setNewApprover("");
-      setError("");
+    if (!approvers.some((a) => a.email === newApprover)) {
+      setApprovers([
+        ...approvers,
+        { email: newApprover, name: newApprover, didApprove: false },
+      ]);
+      setNewApprover('');
+      setError('');
     }
   };
 
   const removeApprover = (email: string) => {
-    setApprovers(approvers.filter(a => a !== email));
+    setApprovers(approvers.filter((a) => a.email !== email));
   };
 
   // Allow pressing Enter to add an approver.
   const handleApproverKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       e.preventDefault();
       addApproverHandler();
     }
@@ -161,18 +171,18 @@ export function ApprovalForm() {
               </Button>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {approvers.map((email) => (
+              {approvers.map((approver) => (
                 <Badge
-                  key={email}
+                  key={approver.email}
                   variant="outline"
                   className="font-normal text-sm pl-2 pr-1"
                 >
-                  {email}
+                  {approver.name}
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-auto p-0 ml-2 text-red-700 hover:text-red-700 rounded-sm"
-                    onClick={() => removeApprover(email)}
+                    onClick={() => removeApprover(approver.email)}
                   >
                     <X className="h-4 w-4 hover:text-inherit" />
                   </Button>
@@ -185,7 +195,7 @@ export function ApprovalForm() {
             <RadioGroup
               value={priority}
               onValueChange={(value: string) =>
-                setPriority(value as "high" | "medium" | "low")
+                setPriority(value as 'high' | 'medium' | 'low')
               }
             >
               <div className="flex flex-col sm:flex-row sm:space-x-4">
@@ -221,7 +231,7 @@ export function ApprovalForm() {
             )}
           </div>
           <Button type="submit" className="w-full">
-            {editId ? "Update Approval Request" : "Create Approval Request"}
+            {editId ? 'Update Approval Request' : 'Create Approval Request'}
           </Button>
         </form>
       )}
