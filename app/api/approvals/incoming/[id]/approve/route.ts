@@ -14,30 +14,45 @@ export async function PATCH(
   if (userError || !user)
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
-  const { data, error } = await supabase
-    .from('approvers')
-    .update({ did_approve: true })
-    .eq('approval_id', id)
-    .eq('email', user.email)
-    .select();
-  if (error)
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  // fetch the current approvers array for the approval.
+  const { data: approval, error: fetchError } = await supabase
+    .from('approvals')
+    .select('approvers')
+    .eq('id', id)
+    .single();
 
-  const { data: approvers, error: approversError } = await supabase
-    .from('approvers')
-    .select('did_approve')
-    .eq('approval_id', id);
-  if (approversError)
-    return NextResponse.json(
-      { error: approversError.message },
-      { status: 500 }
-    );
-  const allApproved = approvers?.every((a: any) => a.did_approve);
+  console.log(approval);
+
+  if (fetchError)
+    return NextResponse.json({ error: fetchError.message }, { status: 500 });
+
+  // update the approvers array: set didApprove to true for the current user.
+  const updatedApprovers = approval.approvers.map((ap: any) =>
+    ap.email === user.email ? { ...ap, didApprove: true } : ap
+  );
+
+  // update the approval record with the new approvers array.
+  const { data: updateData, error: updateError } = await supabase
+    .from('approvals')
+    .update({ approvers: updatedApprovers })
+    .eq('id', id)
+    .select();
+
+  if (updateError)
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+
+  // check if every approver has approved.
+  const allApproved = updatedApprovers.every(
+    (ap: any) => ap.didApprove === true
+  );
   if (allApproved) {
-    await supabase
+    const { error: statusError } = await supabase
       .from('approvals')
       .update({ status: 'approved' })
       .eq('id', id);
+    if (statusError)
+      return NextResponse.json({ error: statusError.message }, { status: 500 });
   }
+
   return NextResponse.json({ message: 'Approval updated' });
 }

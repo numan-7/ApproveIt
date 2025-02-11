@@ -14,12 +14,19 @@ export async function POST(
   if (userError || !user)
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
-  const body = await req.json(); // Expected { comment: string }
+  const body = await req.json();
   const { comment } = body;
 
   const { data, error } = await supabase
     .from('comments')
-    .insert([{ approval_id: id, user_email: user.email, comment }])
+    .insert([
+      {
+        approval_id: id,
+        user_email: user.email,
+        comment,
+        name: user.user_metadata.full_name,
+      },
+    ])
     .select();
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });

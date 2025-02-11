@@ -1,30 +1,33 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ApprovalCard } from "@/components/dashboard/approval-card";
-import { Button } from "@/components/ui/button";
-import { SpinnerLoader } from "@/components/ui/spinner-loader";
-import { ArrowLeft } from "lucide-react";
-import type { Approval } from "@/types/approval";
-import { useMyApprovals } from "@/hooks/useMyApprovals";
-import { usePendingApprovals } from "@/hooks/usePendingApprovals";
+import { useState, useEffect } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { ApprovalCard } from '@/components/dashboard/approval-card';
+import { Button } from '@/components/ui/button';
+import { SpinnerLoader } from '@/components/ui/spinner-loader';
+import { ArrowLeft } from 'lucide-react';
+import type { Approval } from '@/types/approval';
+import { useMyApprovals } from '@/hooks/useMyApprovals';
+import { usePendingApprovals } from '@/hooks/usePendingApprovals';
+import { a } from 'vitest/dist/chunks/suite.BJU7kdY9.js';
 
 export default function ApprovalDetail() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const encodedType = searchParams.get("type") ?? "";
-  let decodedType = "";
+  const encodedType = searchParams.get('type') ?? '';
+  let decodedType = '';
   try {
     decodedType = atob(encodedType);
   } catch (error) {
-    decodedType = "";
+    decodedType = '';
   }
 
-  const { approvals: myApprovals, loading: myApprovalsLoading } = useMyApprovals();
-  const { approvals: pendingApprovals, loading: pendingApprovalsLoading } = usePendingApprovals();
+  const { approvals: myApprovals, loading: myApprovalsLoading } =
+    useMyApprovals();
+  const { approvals: pendingApprovals, loading: pendingApprovalsLoading } =
+    usePendingApprovals();
 
   const [approval, setApproval] = useState<Approval | null>(null);
 
@@ -34,8 +37,9 @@ export default function ApprovalDetail() {
     if (!isLoading) {
       const combinedApprovals = [...myApprovals, ...pendingApprovals];
       const foundApproval = combinedApprovals.find(
-        (a) => a.id === Number(params.id)
+        (a) => a.id.toString() === params.id.toString()
       );
+      console.log('foundApproval', foundApproval);
       setApproval(foundApproval ?? null);
     }
   }, [isLoading, myApprovals, pendingApprovals, params.id]);
@@ -45,7 +49,11 @@ export default function ApprovalDetail() {
   }
 
   if (!approval) {
-    return <div>Approval not found</div>;
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        Approval not found
+      </div>
+    );
   }
 
   return (

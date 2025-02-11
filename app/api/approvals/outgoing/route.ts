@@ -6,6 +6,7 @@ const MAX_FILE_SIZE = 16 * 1024 * 1024;
 
 export async function GET(req: Request) {
   const supabase = await createClientForServer();
+
   const {
     data: { user },
     error: userError,
@@ -24,9 +25,9 @@ export async function GET(req: Request) {
       description,
       status,
       priority,
-      approvers:approvers ( email, name, did_approve ),
-      comments:comments ( user_email, comment, created_at ),
-      attachments:attachments ( name, type, size, url )
+      approvers,
+      comments: comments ( id, name, user_email, comment, created_at ),
+      attachments: attachments ( name, type, size, url )
     `
     )
     .eq('requester', user.email)
@@ -34,11 +35,13 @@ export async function GET(req: Request) {
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
+
   return NextResponse.json(data);
 }
 
 export async function POST(req: Request) {
   const supabase = await createClientForServer();
+
   const {
     data: { user },
     error: userError,
@@ -47,8 +50,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
   const body = await req.json();
-  // Expected payload:
-  // { name, description, priority, date?, approvers: [{ email, name }], attachments: [{ name, type, size (number), url }] }
   const { name, description, priority, date, approvers, attachments } = body;
 
   if (attachments) {
@@ -63,9 +64,11 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     for (const att of attachments) {
-      if (typeof att.size !== 'number' || att.size > MAX_FILE_SIZE) {
+      if (Number(att.size) > MAX_FILE_SIZE) {
         return NextResponse.json(
-          { error: `Attachment '${att.name}' exceeds the 10MB limit` },
+          {
+            error: `Attachment '${att.name}' exceeds the ${MAX_FILE_SIZE} bytes limit`,
+          },
           { status: 400 }
         );
       }
@@ -82,6 +85,7 @@ export async function POST(req: Request) {
         priority,
         date: date || new Date().toISOString(),
         status: 'pending',
+        approvers: approvers || [],
       },
     ])
     .select();
@@ -91,22 +95,6 @@ export async function POST(req: Request) {
 
   const approvalId = data[0].id;
 
-  if (approvers && Array.isArray(approvers)) {
-    const { error: approverError } = await supabase.from('approvers').insert(
-      approvers.map((ap: any) => ({
-        approval_id: approvalId,
-        email: ap.email,
-        name: ap.name,
-        did_approve: false,
-      }))
-    );
-    if (approverError)
-      return NextResponse.json(
-        { error: approverError.message },
-        { status: 500 }
-      );
-  }
-
   if (attachments && Array.isArray(attachments)) {
     const { error: attachError } = await supabase.from('attachments').insert(
       attachments.map((att: any) => ({
@@ -115,6 +103,7 @@ export async function POST(req: Request) {
         type: att.type,
         size: att.size,
         url: att.url,
+        key: att.key,
       }))
     );
     if (attachError)

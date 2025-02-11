@@ -42,7 +42,9 @@ export function ApprovalForm() {
 
   useEffect(() => {
     if (editId) {
-      const approvalToEdit = approvals.find((a) => a.id === Number(editId));
+      const approvalToEdit = approvals.find(
+        (a) => a.id.toString() == editId.toString()
+      );
       if (approvalToEdit) {
         setName(approvalToEdit.name);
         setDescription(approvalToEdit.description);
@@ -56,14 +58,22 @@ export function ApprovalForm() {
   const isLoading = authLoading || loading;
 
   const handleUploadComplete = (files: FileUpload[]) => {
-    console.log('Uploaded files:', files);
-    const newAttachments: Attachment[] = files.map((file) => ({
-      key: file.key,
-      name: file.name,
-      type: file.type,
-      size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-      url: file.url,
-    }));
+    const newAttachments: Attachment[] = files.map((file) => {
+      let sizeStr;
+      if (file.size >= 1024 * 1024) {
+        sizeStr = `${Math.round(file.size / 1024).toFixed(1)} MB`;
+      } else {
+        sizeStr = `${Math.round(file.size / 1024).toFixed(1)} KB`;
+      }
+
+      return {
+        key: file.key,
+        name: file.name,
+        type: file.type,
+        size: sizeStr,
+        url: file.url,
+      };
+    });
     setAttachments((prev) => [...prev, ...newAttachments]);
   };
 
@@ -127,12 +137,14 @@ export function ApprovalForm() {
       attachments,
     };
 
+    console.log(payload);
+
     if (editId) {
       await updateApproval(editId, payload);
     } else {
       await addApproval(payload);
     }
-    router.push('/dashboard');
+    // router.push('/dashboard');
   };
 
   const addApproverHandler = () => {
@@ -262,8 +274,8 @@ export function ApprovalForm() {
               />
               {attachments.length > 0 && (
                 <ul className="list-disc pl-5 text-sm">
-                  {attachments.map((file) => (
-                    <li key={file.key} className="flex items-center gap-2">
+                  {attachments.map((file, i) => (
+                    <li key={i} className="flex items-center gap-2">
                       {deletingFileKey === file.key ? (
                         <Loader2 className="animate-spin h-4 w-4 text-red-700" />
                       ) : (

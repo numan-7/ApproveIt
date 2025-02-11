@@ -66,5 +66,5 @@ export async function DELETE(
     .eq('id', commentId);
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ message: 'Comment deleted successfully' });
+  return NextResponse.json(data);
 }

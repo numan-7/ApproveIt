@@ -3,6 +3,7 @@ import { createClientForServer } from '@/utils/supabase/server';
 
 export async function GET(req: Request) {
   const supabase = await createClientForServer();
+
   const {
     data: { user },
     error: userError,
@@ -10,25 +11,12 @@ export async function GET(req: Request) {
   if (userError || !user)
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
-  const { data, error } = await supabase
-    .from('approvals')
-    .select(
-      `
-      id,
-      name,
-      requester,
-      date,
-      description,
-      status,
-      priority,
-      approvers:approvers ( email, name, did_approve ),
-      comments:comments ( user_email, comment, created_at ),
-      attachments:attachments ( name, type, size, url )
-    `
-    )
-    .filter('approvers.email', 'eq', user.email)
-    .order('date', { ascending: true });
+  const { data, error } = await supabase.rpc('get_approvals_for_user', {
+    user_email: user.email,
+  });
+
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
+
   return NextResponse.json(data);
 }
