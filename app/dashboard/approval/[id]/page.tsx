@@ -9,7 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 import type { Approval } from '@/types/approval';
 import { useMyApprovals } from '@/hooks/useMyApprovals';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
-import { a } from 'vitest/dist/chunks/suite.BJU7kdY9.js';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ApprovalDetail() {
   const params = useParams();
@@ -20,14 +20,15 @@ export default function ApprovalDetail() {
   let decodedType = '';
   try {
     decodedType = atob(encodedType);
+    decodedType = decodedType.slice(0,8);
   } catch (error) {
     decodedType = '';
   }
 
   const { approvals: myApprovals, loading: myApprovalsLoading } =
-    useMyApprovals();
+    useMyApprovals(true ? decodedType == 'outgoing' : false);
   const { approvals: pendingApprovals, loading: pendingApprovalsLoading } =
-    usePendingApprovals();
+    usePendingApprovals(true ? decodedType == 'incoming' : false);
 
   const [approval, setApproval] = useState<Approval | null>(null);
 
@@ -73,3 +74,7 @@ export default function ApprovalDetail() {
     </div>
   );
 }
+function getQueryParams(search: string): { data: any; } {
+  throw new Error('Function not implemented.');
+}
+

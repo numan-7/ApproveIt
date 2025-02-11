@@ -128,7 +128,6 @@ export function ApprovalTable({
     }
   };
 
-  // Function to check approval status for the logged-in user
   const getUserApprovalStatus = () => {
     let hasApproved = false;
     let hasDenied = false;
@@ -274,8 +273,8 @@ export function ApprovalTable({
                   <Link
                     href={`/dashboard/approval/${approval.id}?type=${
                       approval.requester === user?.email
-                        ? btoa('my-requests')
-                        : btoa('pending')
+                        ? btoa('outgoing' + " " + user?.email )
+                        : btoa('incoming' + " " + user?.email )
                     }`}
                     className="text-blue-600 hover:underline"
                   >

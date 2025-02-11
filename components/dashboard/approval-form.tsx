@@ -75,7 +75,6 @@ export function ApprovalForm() {
     }
   }, [editId]);
 
-  // Save draft to localStorage as the user types (only when not editing).
   useEffect(() => {
     if (!editId && typeof window !== 'undefined') {
       const draft = {
@@ -91,7 +90,6 @@ export function ApprovalForm() {
 
   const isLoading = authLoading || loading;
 
-  // Handle file upload completion.
   const handleUploadComplete = (files: FileUpload[]) => {
     setIsFileUploading(false);
 
@@ -149,7 +147,6 @@ export function ApprovalForm() {
     }
   };
 
-  // Handle form submission.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); 
     setError('');

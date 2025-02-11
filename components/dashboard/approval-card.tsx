@@ -40,13 +40,11 @@ interface ApprovalCardProps {
 export function ApprovalCard({ approval }: ApprovalCardProps) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
-  const myApprovalsHook = useMyApprovals();
-  const pendingApprovalsHook = usePendingApprovals();
+  const { deleteApproval } = useMyApprovals(false);
+  const { approveApproval, denyApproval} = usePendingApprovals(false);
   const [newCommentText, setNewCommentText] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
-  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(
-    null
-  );
+  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null);
   const [editedCommentText, setEditedCommentText] = useState('');
 
   useEffect(() => {
@@ -168,17 +166,17 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   const handleDeleteApproval = () => {
     if (approval.requester !== user?.email) return;
     if (confirm('Are you sure you want to delete this approval?')) {
-      myApprovalsHook.deleteApproval(approval.id);
+      deleteApproval(approval.id);
       router.push('/dashboard');
     }
   };
 
   const handleApproveApproval = () => {
-    pendingApprovalsHook.approveApproval(approval.id);
+    approveApproval(approval.id);
   };
 
   const handleDenyApproval = () => {
-    pendingApprovalsHook.denyApproval(approval.id);
+    denyApproval(approval.id);
   };
 
   return (
@@ -264,96 +262,112 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
           </div>
         </div>
 
-        <div>
+        <div className="w-full">
           <h3 className="font-medium mb-3">Comments</h3>
-          <ScrollArea className="h-[240px] rounded-md border p-4">
+          <ScrollArea className="h-[240px] rounded-md border w-full">
             {comments.length > 0 ? (
-              comments.map((comment, index) => (
-                <div
-                  key={comment.id || index}
-                  className="flex items-start space-x-3 mb-4"
-                >
-                  <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarFallback>
-                      {(comment.user || comment.user_email || '?')
-                        .charAt(0)
-                        .toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
+              comments.map((comment, index) => {
+                const previousComment = index > 0 ? comments[index - 1] : null;
+                const isSameAuthorAsPrevious =
+                  previousComment &&
+                  (previousComment.user || previousComment.user_email) ===
+                    (comment.user || comment.user_email);
+
+                return (
+                  <div
+                    key={comment.id || index}
+                    className="relative group pl-2"
+                  >
+                    {!isSameAuthorAsPrevious && (
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-semibold">
-                          {comment.user || comment.user_email || 'Unknown'}
+                          {comment.name || comment.user_email || 'Unknown'}
                         </span>
                         <span className="text-xs text-gray-500">
                           {comment.date || comment.created_at}
                         </span>
                       </div>
-                      {(comment.user || comment.user_email) ===
-                        (user ? user.email : '') && (
-                        <div className="flex space-x-2">
-                          {editingCommentIndex === index ? (
-                            <>
-                              <Button
-                                onClick={() => handleSaveEditedComment(index)}
-                                variant="outline"
-                                size="sm"
-                              >
-                                Save
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  setEditingCommentIndex(null);
-                                  setEditedCommentText('');
-                                }}
-                                variant="ghost"
-                                size="sm"
-                              >
-                                Cancel
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button
-                                onClick={() => {
-                                  setEditingCommentIndex(index);
-                                  setEditedCommentText(comment.text);
-                                }}
-                                variant="ghost"
-                                size="sm"
-                              >
-                                Edit
-                              </Button>
-                              <Button
-                                onClick={() => handleDeleteComment(index)}
-                                variant="ghost"
-                                size="sm"
-                              >
-                                Delete
-                              </Button>
-                            </>
-                          )}
-                        </div>
+                    )}
+
+                    <div className="pr-12 hover:bg-gray-100">
+                      {editingCommentIndex === index ? (
+                        <Textarea
+                          value={editedCommentText}
+                          onChange={(e) =>
+                            setEditedCommentText(e.target.value)
+                          }
+                          rows={1}
+                          className="resize-none border-none focus:outline-none text-sm bg-transparent p-0"
+                        />
+                      ) : (
+                        <p className="text-sm break-words">
+                          {comment.text || comment.comment}
+                        </p>
                       )}
                     </div>
-                    {editingCommentIndex === index ? (
-                      <Textarea
-                        value={editedCommentText}
-                        onChange={(e) => setEditedCommentText(e.target.value)}
-                        rows={2}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-sm mt-1 break-words">
-                        {comment.comment}
-                      </p>
+
+                    {(comment.user || comment.user_email) ===
+                      (user ? user.email : '') && (
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-1">
+                        {editingCommentIndex === index ? (
+                          <>
+                            <Button
+                              onClick={() =>
+                                handleSaveEditedComment(index)
+                              }
+                              variant="ghost"
+                              size="sm"
+                              className="p-1"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                setEditingCommentIndex(null);
+                                setEditedCommentText('');
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="p-1"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => {
+                                setEditingCommentIndex(index);
+                                setEditedCommentText(
+                                  // @ts-ignore
+                                  comment.text || comment.comment
+                                );
+                              }}
+                              variant="ghost"
+                              size="sm"
+                              className="p-1"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              onClick={() =>
+                                handleDeleteComment(index)
+                              }
+                              variant="ghost"
+                              size="sm"
+                              className="p-1"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <p className="text-sm text-gray-500">No comments yet.</p>
+              <p className="text-sm text-gray-500 flex items-center justify-center">No comments yet.</p>
             )}
           </ScrollArea>
 
@@ -369,7 +383,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
               />
               <Button
                 onClick={handleAddComment}
-                className="w-full sm:w-auto sm:h-full"
+                className="w-full sm:w-auto sm:h-full sm:p-6"
               >
                 Send
               </Button>

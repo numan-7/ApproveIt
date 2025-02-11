@@ -4,12 +4,11 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 
-export function usePendingApprovals() {
+export function usePendingApprovals(runUseEffect=true) {
   const { user, loading: authLoading } = useAuth();
   const [approvals, setApprovals] = useState<Approval[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true ? runUseEffect : false);
 
-  // Fetch your incoming (pending) approvals from the API.
   const fetchApprovals = async () => {
     try {
       const res = await fetch('/api/approvals/incoming');
@@ -27,17 +26,15 @@ export function usePendingApprovals() {
   };
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && runUseEffect) {
       fetchApprovals();
     }
   }, [authLoading, user]);
 
-  // A simple state update helper for a single approval.
   const updateApproval = (id: number, updated: Approval) => {
     setApprovals((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };
 
-  // Approve one or more approvals via the API.
   const approveApproval = async (ids: number[] | number) => {
     const idArr = Array.isArray(ids) ? ids : [ids];
     try {
@@ -46,14 +43,12 @@ export function usePendingApprovals() {
           fetch(`/api/approvals/incoming/${id}/approve`, { method: 'PATCH' })
         )
       );
-      // After the action, refresh the pending approvals.
       fetchApprovals();
     } catch (error) {
       console.error(error);
     }
   };
 
-  // Deny one or more approvals via the API.
   const denyApproval = async (ids: number[] | number) => {
     const idArr = Array.isArray(ids) ? ids : [ids];
     try {
@@ -62,7 +57,6 @@ export function usePendingApprovals() {
           fetch(`/api/approvals/incoming/${id}/deny`, { method: 'PATCH' })
         )
       );
-      // After the action, refresh the pending approvals.
       fetchApprovals();
     } catch (error) {
       console.error(error);

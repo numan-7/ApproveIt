@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 
-export function useMyApprovals() {
+export function useMyApprovals(runUseEffect=true) {
   const { user, loading: authLoading } = useAuth();
   const [approvals, setApprovals] = useState<Approval[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true ? runUseEffect : false);
 
   const fetchApprovals = async () => {
     try {
@@ -26,7 +26,7 @@ export function useMyApprovals() {
   };
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && runUseEffect) {
       fetchApprovals();
     }
   }, [authLoading, user]);
