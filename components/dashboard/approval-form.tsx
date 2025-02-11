@@ -57,6 +57,37 @@ export function ApprovalForm() {
     }
   }, [editId, approvals]);
 
+  useEffect(() => {
+    if (!editId && typeof window !== 'undefined') {
+      const savedDraft = localStorage.getItem('approvalFormDraft');
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          setName(draft.name || '');
+          setDescription(draft.description || '');
+          setApprovers(draft.approvers || []);
+          setPriority(draft.priority || 'medium');
+          setAttachments(draft.attachments || []);
+        } catch (err) {
+          console.error('Error parsing saved draft:', err);
+        }
+      }
+    }
+  }, [editId]);
+
+  useEffect(() => {
+    if (!editId && typeof window !== 'undefined') {
+      const draft = {
+        name,
+        description,
+        approvers,
+        priority,
+        attachments,
+      };
+      localStorage.setItem('approvalFormDraft', JSON.stringify(draft));
+    }
+  }, [name, description, approvers, priority, attachments, editId]);
+
   const isLoading = authLoading || loading;
 
   const handleUploadComplete = (files: FileUpload[]) => {
@@ -152,6 +183,9 @@ export function ApprovalForm() {
         await updateApproval(editId, payload);
       } else {
         await addApproval(payload);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('approvalFormDraft');
+        }
       }
       router.push('/dashboard');
     } catch (err: any) {
@@ -326,9 +360,7 @@ export function ApprovalForm() {
             className="w-full flex items-center justify-center"
             disabled={isSubmitting || isFileUploading || !!deletingFileKey}
           >
-            {(isSubmitting || isFileUploading || !!deletingFileKey) && (
-              <Loader2 className="animate-spin h-4 w-4 mr-2" />
-            )}
+            {isSubmitting && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
             {editId ? 'Update Approval Request' : 'Create Approval Request'}
           </Button>
         </form>
