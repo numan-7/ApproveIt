@@ -75,6 +75,7 @@ export function ApprovalForm() {
     }
   }, [editId]);
 
+  // Save draft to localStorage as the user types (only when not editing).
   useEffect(() => {
     if (!editId && typeof window !== 'undefined') {
       const draft = {
@@ -90,6 +91,7 @@ export function ApprovalForm() {
 
   const isLoading = authLoading || loading;
 
+  // Handle file upload completion.
   const handleUploadComplete = (files: FileUpload[]) => {
     setIsFileUploading(false);
 
@@ -110,6 +112,10 @@ export function ApprovalForm() {
       };
     });
     setAttachments((prev) => [...prev, ...newAttachments]);
+
+    const existingKeys = JSON.parse(localStorage.getItem('unsubmittedFiles') || '[]');
+    const updatedKeys = [...existingKeys, ...newAttachments.map((file) => file.key)];
+    localStorage.setItem('unsubmittedFiles', JSON.stringify(updatedKeys));
   };
 
   const handleDeleteAttachment = async (attachmentKey: string) => {
@@ -132,6 +138,10 @@ export function ApprovalForm() {
       setAttachments((prevAttachments) =>
         prevAttachments.filter((att) => att.key !== attachmentKey)
       );
+
+      const existingKeys = JSON.parse(localStorage.getItem('unsubmittedFiles') || '[]');
+      const updatedKeys = existingKeys.filter((key: string) => key !== attachmentKey);
+      localStorage.setItem('unsubmittedFiles', JSON.stringify(updatedKeys));
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -139,6 +149,7 @@ export function ApprovalForm() {
     }
   };
 
+  // Handle form submission.
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); 
     setError('');
@@ -179,6 +190,8 @@ export function ApprovalForm() {
           localStorage.removeItem('approvalFormDraft');
         }
       }
+      localStorage.removeItem('unsubmittedFiles');
+
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message);
@@ -213,6 +226,26 @@ export function ApprovalForm() {
       addApproverHandler();
     }
   };
+
+  useEffect(() => {
+    return () => {
+      const unsubmittedFiles = JSON.parse(localStorage.getItem('unsubmittedFiles') || '[]');
+      if (unsubmittedFiles.length > 0) {
+        unsubmittedFiles.forEach(async (fileKey: string) => {
+          try {
+            await fetch('/api/uploadthing', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fileKey }),
+            });
+          } catch (error) {
+            console.error('Error deleting unsubmitted file:', error);
+          }
+        });
+      }
+      localStorage.removeItem('unsubmittedFiles');
+    };
+  }, []);
 
   return (
     <>
@@ -272,9 +305,7 @@ export function ApprovalForm() {
                     size="sm"
                     className="h-auto p-0 ml-2 text-red-700 hover:text-red-700 rounded-sm"
                     onClick={() => removeApprover(approver.email)}
-                    disabled={
-                      isFileUploading || isSubmitting || !!deletingFileKey
-                    }
+                    disabled={isFileUploading || isSubmitting || !!deletingFileKey}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -311,9 +342,15 @@ export function ApprovalForm() {
             <div className="flex flex-col gap-2">
               <UploadButton
                 endpoint="imageUploader"
-                onClientUploadStart={() => setIsFileUploading(true)}
+                onBeforeUploadBegin={(files: File[]) => {
+                  setIsFileUploading(true);
+                  return files;
+                }}            
                 // @ts-ignore
-                onClientUploadComplete={handleUploadComplete}
+                onClientUploadComplete={(files: FileUpload[]) => {
+                  handleUploadComplete(files);
+                  setIsFileUploading(false);
+                }}
                 onUploadError={(error: Error) => {
                   setError(`Upload error: ${error.message}`);
                   setIsFileUploading(false);
@@ -334,9 +371,7 @@ export function ApprovalForm() {
                           size="sm"
                           className="p-0 text-red-700 hover:text-red-700"
                           onClick={() => handleDeleteAttachment(file.key)}
-                          disabled={
-                            isFileUploading || isSubmitting || !!deletingFileKey
-                          }
+                          disabled={isFileUploading || isSubmitting || !!deletingFileKey}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -353,7 +388,7 @@ export function ApprovalForm() {
             className="w-full flex items-center justify-center"
             disabled={isSubmitting || isFileUploading || !!deletingFileKey}
           >
-            {isSubmitting && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+            {isSubmitting || isFileUploading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
             {editId ? 'Update Approval Request' : 'Create Approval Request'}
           </Button>
         </form>
