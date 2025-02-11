@@ -39,11 +39,13 @@ export function ApprovalForm() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [error, setError] = useState<string>('');
   const [deletingFileKey, setDeletingFileKey] = useState<string | null>(null);
+  const [isFileUploading, setIsFileUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (editId) {
       const approvalToEdit = approvals.find(
-        (a) => a.id.toString() == editId.toString()
+        (a) => a.id.toString() === editId.toString()
       );
       if (approvalToEdit) {
         setName(approvalToEdit.name);
@@ -58,12 +60,14 @@ export function ApprovalForm() {
   const isLoading = authLoading || loading;
 
   const handleUploadComplete = (files: FileUpload[]) => {
+    setIsFileUploading(false);
+
     const newAttachments: Attachment[] = files.map((file) => {
       let sizeStr;
       if (file.size >= 1024 * 1024) {
-        sizeStr = `${Math.round(file.size / 1024).toFixed(1)} MB`;
+        sizeStr = `${(file.size / 1024 / 1024).toFixed(1)} MB`;
       } else {
-        sizeStr = `${Math.round(file.size / 1024).toFixed(1)} KB`;
+        sizeStr = `${(file.size / 1024).toFixed(1)} KB`;
       }
 
       return {
@@ -125,6 +129,12 @@ export function ApprovalForm() {
       return;
     }
 
+    if (isFileUploading || deletingFileKey) {
+      setError('Please wait until file uploads/deletions are complete.');
+      return;
+    }
+
+    setIsSubmitting(true);
     const payload: Partial<Approval> = {
       name,
       description,
@@ -137,14 +147,18 @@ export function ApprovalForm() {
       attachments,
     };
 
-    console.log(payload);
-
-    if (editId) {
-      await updateApproval(editId, payload);
-    } else {
-      await addApproval(payload);
+    try {
+      if (editId) {
+        await updateApproval(editId, payload);
+      } else {
+        await addApproval(payload);
+      }
+      router.push('/dashboard');
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
-    // router.push('/dashboard');
   };
 
   const addApproverHandler = () => {
@@ -187,6 +201,7 @@ export function ApprovalForm() {
               id="name"
               placeholder="Enter approval name"
               required
+              disabled={isFileUploading || isSubmitting || !!deletingFileKey}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -197,6 +212,7 @@ export function ApprovalForm() {
               id="description"
               placeholder="Enter approval description"
               required
+              disabled={isFileUploading || isSubmitting || !!deletingFileKey}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -207,6 +223,7 @@ export function ApprovalForm() {
               <Input
                 type="email"
                 placeholder="Enter approver email"
+                disabled={isFileUploading || isSubmitting || !!deletingFileKey}
                 value={newApprover}
                 onChange={(e) => setNewApprover(e.target.value)}
                 onKeyDown={handleApproverKeyDown}
@@ -229,6 +246,9 @@ export function ApprovalForm() {
                     size="sm"
                     className="h-auto p-0 ml-2 text-red-700 hover:text-red-700 rounded-sm"
                     onClick={() => removeApprover(approver.email)}
+                    disabled={
+                      isFileUploading || isSubmitting || !!deletingFileKey
+                    }
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -265,12 +285,15 @@ export function ApprovalForm() {
             <div className="flex flex-col gap-2">
               <UploadButton
                 endpoint="imageUploader"
+                onClientUploadStart={() => setIsFileUploading(true)}
                 onClientUploadComplete={handleUploadComplete}
                 onUploadError={(error: Error) => {
                   setError(`Upload error: ${error.message}`);
+                  setIsFileUploading(false);
                 }}
                 config={{ cn: twMerge }}
                 className="flex items-start justify-start ut-button:font-dm ut-button:h-9 ut-button:text-sm ut-button:bg-black hover:ut-button:bg-primary/90"
+                disabled={isFileUploading || isSubmitting || !!deletingFileKey}
               />
               {attachments.length > 0 && (
                 <ul className="list-disc pl-5 text-sm">
@@ -284,6 +307,9 @@ export function ApprovalForm() {
                           size="sm"
                           className="p-0 text-red-700 hover:text-red-700"
                           onClick={() => handleDeleteAttachment(file.key)}
+                          disabled={
+                            isFileUploading || isSubmitting || !!deletingFileKey
+                          }
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -295,7 +321,14 @@ export function ApprovalForm() {
               )}
             </div>
           </div>
-          <Button type="submit" className="w-full">
+          <Button
+            type="submit"
+            className="w-full flex items-center justify-center"
+            disabled={isSubmitting || isFileUploading || !!deletingFileKey}
+          >
+            {(isSubmitting || isFileUploading || !!deletingFileKey) && (
+              <Loader2 className="animate-spin h-4 w-4 mr-2" />
+            )}
             {editId ? 'Update Approval Request' : 'Create Approval Request'}
           </Button>
         </form>
