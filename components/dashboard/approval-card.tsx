@@ -29,6 +29,8 @@ interface Comment {
   date: string;
   text: string;
   name?: string;
+  created_at?: string;
+  comment?: string;
 }
 
 interface ApprovalCardProps {

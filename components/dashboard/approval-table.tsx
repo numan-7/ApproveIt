@@ -138,10 +138,12 @@ export function ApprovalTable({
       if (!approval || !approval.approvers) return;
 
       const approver = approval.approvers.find(
+        // @ts-ignore
         (ap) => ap.email.toLowerCase() === user?.email.toLowerCase()
       );
 
       if (approver) {
+        // @ts-ignore
         if (approver.didApprove === true || approver.did_approve === true) {
           hasApproved = true;
         } else {

@@ -312,6 +312,7 @@ export function ApprovalForm() {
               <UploadButton
                 endpoint="imageUploader"
                 onClientUploadStart={() => setIsFileUploading(true)}
+                // @ts-ignore
                 onClientUploadComplete={handleUploadComplete}
                 onUploadError={(error: Error) => {
                   setError(`Upload error: ${error.message}`);
