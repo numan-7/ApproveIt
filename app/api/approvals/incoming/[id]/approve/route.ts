@@ -21,8 +21,6 @@ export async function PATCH(
     .eq('id', id)
     .single();
 
-  console.log(approval);
-
   if (fetchError)
     return NextResponse.json({ error: fetchError.message }, { status: 500 });
 

@@ -115,8 +115,6 @@ export function ApprovalForm() {
   const handleDeleteAttachment = async (attachmentKey: string) => {
     setDeletingFileKey(attachmentKey);
 
-    console.log(attachmentKey)
-
     try {
       if (!editId) {
         const res = await fetch('/api/uploadthing', {
@@ -140,8 +138,6 @@ export function ApprovalForm() {
       setDeletingFileKey(null);
     }
   };
-
-  console.log(approvals)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); 

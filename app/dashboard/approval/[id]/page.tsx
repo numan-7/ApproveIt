@@ -39,7 +39,6 @@ export default function ApprovalDetail() {
       const foundApproval = combinedApprovals.find(
         (a) => a.id.toString() === params.id.toString()
       );
-      console.log('foundApproval', foundApproval);
       setApproval(foundApproval ?? null);
     }
   }, [isLoading, myApprovals, pendingApprovals, params.id]);

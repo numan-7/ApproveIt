@@ -4,7 +4,6 @@ import { UTApi } from 'uploadthing/server';
 
 export const deleteUTFiles = async (files: string[]) => {
   const utapi = new UTApi();
-  console.log("here deleting", files)
   try {
     await utapi.deleteFiles(files);
   } catch (error) {

@@ -179,8 +179,6 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
     pendingApprovalsHook.denyApproval(approval.id);
   };
 
-  console.log('approval', approval);
-
   return (
     <Card className="overflow-hidden border border-gray-200 mb-4">
       <CardHeader className="pb-4">
