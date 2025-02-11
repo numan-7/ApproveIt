@@ -30,7 +30,7 @@ export function Pagination({
         variant="outline"
         size="sm"
         onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
+        disabled={currentPage === (totalPages == 0 ? 1 : totalPages)}
       >
         <ChevronRight className="h-4 w-4" />
       </Button>
