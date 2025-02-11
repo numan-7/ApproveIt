@@ -4,51 +4,89 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 
-const LOCAL_STORAGE_KEY_PREFIX = 'myApprovals_';
-
 export function useMyApprovals() {
   const { user, loading: authLoading } = useAuth();
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const key = user
-    ? `${LOCAL_STORAGE_KEY_PREFIX}${user.email}`
-    : `${LOCAL_STORAGE_KEY_PREFIX}default`;
+  const fetchApprovals = async () => {
+    try {
+      const res = await fetch('/api/approvals/outgoing');
+      const data = await res.json();
+      if (res.ok) {
+        setApprovals(data);
+      } else {
+        console.error('Error fetching my approvals:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching my approvals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && user) {
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        try {
-          setApprovals(JSON.parse(stored));
-        } catch (e) {
-          console.error('Error parsing my approvals:', e);
-          setApprovals([]);
-        }
+      fetchApprovals();
+    }
+  }, [authLoading, user]);
+
+  const addApproval = async (approval: Partial<Approval>) => {
+    try {
+      const res = await fetch('/api/approvals/outgoing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(approval),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setApprovals((prev) => [...prev, data[0]]);
       } else {
-        setApprovals([]);
+        throw new Error(data.error || 'Failed to create approval');
       }
-      setLoading(false);
+    } catch (error) {
+      console.error(error);
     }
-  }, [authLoading, user, key]);
-
-  // Write changes to localStorage whenever approvals update.
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem(key, JSON.stringify(approvals));
-    }
-  }, [approvals, key, loading]);
-
-  const addApproval = (approval: Approval) => {
-    setApprovals((prev) => [...prev, approval]);
   };
 
-  const updateApproval = (id: number, updated: Approval) => {
-    setApprovals((prev) => prev.map((a) => (a.id === id ? updated : a)));
+  const updateApproval = async (
+    id: number | string,
+    updated: Partial<Approval>
+  ) => {
+    try {
+      const res = await fetch(`/api/approvals/outgoing/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const updatedApproval = data.updatedApproval;
+        setApprovals((prev) =>
+          prev.map((a) => (a.id === id ? updatedApproval : a))
+        );
+      } else {
+        throw new Error(data.error || 'Failed to update approval');
+      }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const deleteApproval = (ids: number[]) => {
-    setApprovals((prev) => prev.filter((a) => !ids.includes(a.id)));
+  const deleteApproval = async (ids: number[] | number) => {
+    const idArr = Array.isArray(ids) ? ids : [ids];
+    try {
+      await Promise.all(
+        idArr.map((id) =>
+          fetch(`/api/approvals/outgoing/${id}`, {
+            method: 'DELETE',
+          })
+        )
+      );
+      setApprovals((prev) => prev.filter((a) => !idArr.includes(a.id)));
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return {
@@ -57,6 +95,6 @@ export function useMyApprovals() {
     addApproval,
     updateApproval,
     deleteApproval,
-    setApprovals,
+    refresh: fetchApprovals,
   };
 }

@@ -1,4 +1,5 @@
 export interface Attachment {
+  key: string;
   name: string;
   type: string;
   size: string;
@@ -6,6 +7,7 @@ export interface Attachment {
 }
 
 export interface Comment {
+  id?: number;
   user: string;
   text: string;
   date: string;

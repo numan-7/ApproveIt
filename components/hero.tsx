@@ -52,11 +52,13 @@ export default function Hero({ openSidebar }: HeroProps) {
             instant visibility and control.
           </p>
           <Button
-            className="bg-white/95 text-forest hover:bg-white/90 text-lg h-12 px-8 rounded-full group"
             onClick={openSidebar}
+            className="flex items-center bg-white/95 text-forest hover:bg-white/90 text-lg h-12 pl-8 pr-4 rounded-full group"
           >
-            Get Started
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <span className="flex-grow">Get Started</span>
+            <span className="-mr-2 flex items-center justify-center h-10 w-10 rounded-full bg-forest text-white transition-transform group-hover:translate-x-1">
+              <ArrowRight className="h-4 w-4" />
+            </span>
           </Button>
         </motion.div>
       </div>

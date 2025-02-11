@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -23,9 +23,12 @@ import { useAuth } from '@/context/AuthContext';
 import { SpinnerLoader } from '../ui/spinner-loader';
 
 interface Comment {
-  user: string;
+  id?: number;
+  user?: string;
+  user_email?: string;
   date: string;
   text: string;
+  name?: string;
 }
 
 interface ApprovalCardProps {
@@ -38,91 +41,109 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   const myApprovalsHook = useMyApprovals();
   const pendingApprovalsHook = usePendingApprovals();
   const [newCommentText, setNewCommentText] = useState('');
-  const [comments, setComments] = useState<Comment[]>(approval.comments ?? []);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(
     null
   );
   const [editedCommentText, setEditedCommentText] = useState('');
 
+  useEffect(() => {
+    setComments(approval.comments ?? []);
+  }, [approval.comments]);
+
   if (authLoading) return <SpinnerLoader />;
 
-  // Determine if the current user is one of the approvers
   const currentUserApprover = approval.approvers.find(
     (a) => a.email === user?.email
   );
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newCommentText.trim()) return;
-    const newComment: Comment = {
-      user: user?.email ?? 'unknown',
-      date: new Date().toLocaleString(),
-      text: newCommentText,
-    };
-    const updatedComments = [...comments, newComment];
-    setComments(updatedComments);
-    if (user && approval.requester === user.email) {
-      myApprovalsHook.updateApproval(approval.id, {
-        ...approval,
-        comments: updatedComments,
+    try {
+      const res = await fetch(`/api/approvals/${approval.id}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment: newCommentText }),
       });
-    } else {
-      pendingApprovalsHook.updateApproval(approval.id, {
-        ...approval,
-        comments: updatedComments,
-      });
-    }
-    setNewCommentText('');
-  };
-
-  const handleDeleteComment = (index: number) => {
-    const updatedComments = comments.filter((_, i) => i !== index);
-    setComments(updatedComments);
-    if (user && approval.requester === user.email) {
-      myApprovalsHook.updateApproval(approval.id, {
-        ...approval,
-        comments: updatedComments,
-      });
-    } else {
-      pendingApprovalsHook.updateApproval(approval.id, {
-        ...approval,
-        comments: updatedComments,
-      });
-    }
-    if (editingCommentIndex === index) {
-      setEditingCommentIndex(null);
-      setEditedCommentText('');
+      const data = await res.json();
+      if (res.ok) {
+        const newComment = data[0];
+        setComments((prev) => [
+          ...prev,
+          {
+            id: newComment.id,
+            user: newComment.user_email,
+            date: newComment.created_at,
+            text: newComment.comment,
+            name: newComment.name,
+          },
+        ]);
+        setNewCommentText('');
+      } else {
+        console.error('Error adding comment:', data.error);
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
     }
   };
 
-  const handleEditComment = (index: number) => {
-    setEditingCommentIndex(index);
-    setEditedCommentText(comments[index].text);
+  const handleSaveEditedComment = async (index: number) => {
+    const commentToEdit = comments[index];
+    if (!commentToEdit.id) return;
+    try {
+      const res = await fetch(
+        `/api/approvals/${approval.id}/comment/${commentToEdit.id}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ comment: editedCommentText }),
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        const updated = data[0];
+        setComments((prev) =>
+          prev.map((c, i) =>
+            i === index
+              ? {
+                  id: updated.id,
+                  user: updated.user_email,
+                  date: updated.created_at,
+                  text: updated.comment,
+                  name: updated.name,
+                }
+              : c
+          )
+        );
+        setEditingCommentIndex(null);
+        setEditedCommentText('');
+      } else {
+        console.error('Error editing comment:', data.error);
+      }
+    } catch (error) {
+      console.error('Error editing comment:', error);
+    }
   };
 
-  const handleSaveEditedComment = (index: number) => {
-    const updatedComments = comments.map((comment, i) =>
-      i === index
-        ? {
-            ...comment,
-            text: editedCommentText,
-            date: new Date().toLocaleString(),
-          }
-        : comment
-    );
-    setComments(updatedComments);
-    if (user && approval.requester === user.email) {
-      myApprovalsHook.updateApproval(approval.id, {
-        ...approval,
-        comments: updatedComments,
-      });
-    } else {
-      pendingApprovalsHook.updateApproval(approval.id, {
-        ...approval,
-        comments: updatedComments,
-      });
+  const handleDeleteComment = async (index: number) => {
+    const commentToDelete = comments[index];
+    if (!commentToDelete.id) return;
+    try {
+      const res = await fetch(
+        `/api/approvals/${approval.id}/comment/${commentToDelete.id}`,
+        {
+          method: 'DELETE',
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        setComments((prev) => prev.filter((_, i) => i !== index));
+      } else {
+        console.error('Error deleting comment:', data.error);
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
     }
-    setEditingCommentIndex(null);
-    setEditedCommentText('');
   };
 
   const getPriorityColor = (priority: string) => {
@@ -143,11 +164,9 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   };
 
   const handleDeleteApproval = () => {
-    if (approval.requester !== user?.email) {
-      return;
-    }
+    if (approval.requester !== user?.email) return;
     if (confirm('Are you sure you want to delete this approval?')) {
-      myApprovalsHook.deleteApproval([approval.id]);
+      myApprovalsHook.deleteApproval(approval.id);
       router.push('/dashboard');
     }
   };
@@ -159,6 +178,8 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   const handleDenyApproval = () => {
     pendingApprovalsHook.denyApproval(approval.id);
   };
+
+  console.log('approval', approval);
 
   return (
     <Card className="overflow-hidden border border-gray-200 mb-4">
@@ -178,7 +199,9 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
           </div>
           <Badge
             variant="outline"
-            className={`${getPriorityColor(approval.priority)} mt-2 sm:mt-0 text-sm font-normal`}
+            className={`${getPriorityColor(
+              approval.priority
+            )} mt-2 sm:mt-0 text-sm font-normal`}
           >
             {approval.priority.charAt(0).toUpperCase() +
               approval.priority.slice(1)}
@@ -195,26 +218,49 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
         <div>
           <h3 className="font-medium mb-3">Attachments</h3>
           <div className="grid gap-2">
-            {approval.attachments.map((file, index) => (
-              <div
-                key={index}
-                className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
-                <div className="flex items-center gap-3 min-w-0 mb-2 sm:mb-0">
-                  <Paperclip className="h-4 w-4 flex-shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate max-w-[150px] sm:max-w-full">
-                      {file.name}
-                    </p>
-                    <p className="text-xs text-gray-500">{file.size}</p>
+            {approval.attachments &&
+              approval.attachments.map((file, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div className="flex items-center gap-3 min-w-0 mb-2 sm:mb-0">
+                    <Paperclip className="h-4 w-4 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate max-w-[150px] sm:max-w-full">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{file.size}</p>
+                    </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto sm:ml-2"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(file.url);
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', file.name);
+                        document.body.appendChild(link);
+                        link.click();
+
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                      } catch (error) {
+                        console.error('Error downloading file:', error);
+                      }
+                    }}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Download</span>
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm" className="ml-auto sm:ml-2">
-                  <Download className="h-4 w-4 mr-2" />
-                  <span className="hidden sm:inline">Download</span>
-                </Button>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
@@ -223,23 +269,29 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
           <ScrollArea className="h-[240px] rounded-md border p-4">
             {comments.length > 0 ? (
               comments.map((comment, index) => (
-                <div key={index} className="flex items-start space-x-3 mb-4">
+                <div
+                  key={comment.id || index}
+                  className="flex items-start space-x-3 mb-4"
+                >
                   <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarFallback>
-                      {comment.user?.charAt(0).toUpperCase()}
+                      {(comment.user || comment.user_email || '?')
+                        .charAt(0)
+                        .toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="text-sm font-semibold">
-                          {comment.user}
+                          {comment.user || comment.user_email || 'Unknown'}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {comment.date}
+                          {comment.date || comment.created_at}
                         </span>
                       </div>
-                      {comment.user === (user ? user.email : '') && (
+                      {(comment.user || comment.user_email) ===
+                        (user ? user.email : '') && (
                         <div className="flex space-x-2">
                           {editingCommentIndex === index ? (
                             <>
@@ -264,7 +316,10 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
                           ) : (
                             <>
                               <Button
-                                onClick={() => handleEditComment(index)}
+                                onClick={() => {
+                                  setEditingCommentIndex(index);
+                                  setEditedCommentText(comment.text);
+                                }}
                                 variant="ghost"
                                 size="sm"
                               >
@@ -290,7 +345,9 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
                         className="mt-1"
                       />
                     ) : (
-                      <p className="text-sm mt-1 break-words">{comment.text}</p>
+                      <p className="text-sm mt-1 break-words">
+                        {comment.comment}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -322,7 +379,6 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
       </CardContent>
 
       <CardFooter className="flex flex-col sm:flex-row gap-2">
-        {/* If the current user is the approval’s owner, show edit/delete buttons */}
         {approval.requester === (user ? user.email : '') ? (
           <>
             <Button

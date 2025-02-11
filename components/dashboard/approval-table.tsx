@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   Table,
   TableBody,
@@ -15,32 +15,33 @@ import { Pencil, Check, X, Search, Filter } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { useMyApprovals } from '@/hooks/useMyApprovals';
-import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import type { Approval } from '@/types/approval';
 
 interface ApprovalTableProps {
-  approvals?: Approval[];
+  approvals: Approval[];
   currentPage: number;
   itemsPerPage: number;
+  type: 'incoming' | 'outgoing';
+  onApprove?: (ids: number[] | number) => void;
+  onDeny?: (ids: number[] | number) => void;
+  onDelete?: (ids: number[] | number) => void;
 }
 
 export function ApprovalTable({
-  approvals: propApprovals,
+  approvals,
   currentPage,
   itemsPerPage,
+  type,
+  onApprove,
+  onDeny,
+  onDelete,
 }: ApprovalTableProps) {
-  const approvals = propApprovals || [];
   const [search, setSearch] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  const pathname = usePathname();
   const router = useRouter();
   const { user } = useAuth();
-
-  const isMyRequests = pathname.includes('/dashboard/approvals/outgoing');
-  const isPendingApprovals = pathname.includes('/dashboard/approvals/incoming');
 
   const filteredApprovals = approvals.filter((approval) => {
     const matchesSearch = approval.name
@@ -99,9 +100,6 @@ export function ApprovalTable({
     }
   };
 
-  const { deleteApproval } = useMyApprovals();
-  const { approveApproval, denyApproval } = usePendingApprovals();
-
   const handleAction = (action: 'approve' | 'deny' | 'delete') => {
     if (selectedIds.length === 0) return;
 
@@ -118,18 +116,44 @@ export function ApprovalTable({
     }
 
     if (confirm(confirmMessage)) {
-      if (action === 'approve') {
-        approveApproval(selectedIds);
-      } else if (action === 'deny') {
-        denyApproval(selectedIds);
-      } else if (action === 'delete') {
-        deleteApproval(selectedIds);
+      if (action === 'approve' && onApprove) {
+        onApprove(selectedIds);
+      } else if (action === 'deny' && onDeny) {
+        onDeny(selectedIds);
+      } else if (action === 'delete' && onDelete) {
+        onDelete(selectedIds);
       }
       setSelectedIds([]);
-      // Reload the page since router wasn't updating the table
       location.reload();
     }
   };
+
+  // Function to check approval status for the logged-in user
+  const getUserApprovalStatus = () => {
+    let hasApproved = false;
+    let hasDenied = false;
+
+    selectedIds.forEach((id) => {
+      const approval = approvals.find((a) => a.id === id);
+      if (!approval || !approval.approvers) return;
+
+      const approver = approval.approvers.find(
+        (ap) => ap.email.toLowerCase() === user?.email.toLowerCase()
+      );
+
+      if (approver) {
+        if (approver.didApprove === true || approver.did_approve === true) {
+          hasApproved = true;
+        } else {
+          hasDenied = true;
+        }
+      }
+    });
+
+    return { hasApproved, hasDenied };
+  };
+
+  const { hasApproved, hasDenied } = getUserApprovalStatus();
 
   return (
     <div>
@@ -161,11 +185,9 @@ export function ApprovalTable({
 
         <div className="w-full md:min-w-[220px]">
           <div
-            className={`flex items-center space-x-2 ${
-              selectedIds.length > 0 ? 'visible' : 'invisible'
-            }`}
+            className={`flex items-center space-x-2 ${selectedIds.length > 0 ? 'visible' : 'invisible'}`}
           >
-            {isMyRequests && selectedIds.length === 1 && (
+            {type === 'outgoing' && selectedIds.length === 1 && (
               <Button
                 onClick={handleEdit}
                 size="sm"
@@ -175,13 +197,14 @@ export function ApprovalTable({
                 Edit
               </Button>
             )}
-            {isPendingApprovals && selectedIds.length > 0 && (
+            {type === 'incoming' && selectedIds.length > 0 && (
               <>
                 <Button
                   onClick={() => handleAction('approve')}
                   size="sm"
                   variant="outline"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
+                  disabled={hasDenied}
                 >
                   <Check className="w-4 h-4" />
                   Approve
@@ -191,13 +214,14 @@ export function ApprovalTable({
                   size="sm"
                   variant="destructive"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
+                  disabled={hasApproved}
                 >
                   <X className="w-4 h-4" />
                   Deny
                 </Button>
               </>
             )}
-            {isMyRequests && (
+            {type === 'outgoing' && (
               <Button
                 onClick={() => handleAction('delete')}
                 size="sm"

@@ -3,88 +3,70 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
-import { DataApprovals } from '@/data/pending-approvals';
-
-const LOCAL_STORAGE_KEY_PREFIX = 'pendingApprovals_';
 
 export function usePendingApprovals() {
   const { user, loading: authLoading } = useAuth();
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const key = user
-    ? `${LOCAL_STORAGE_KEY_PREFIX}${user.email}`
-    : `${LOCAL_STORAGE_KEY_PREFIX}default`;
+  // Fetch your incoming (pending) approvals from the API.
+  const fetchApprovals = async () => {
+    try {
+      const res = await fetch('/api/approvals/incoming');
+      const data = await res.json();
+      if (res.ok) {
+        setApprovals(data);
+      } else {
+        console.error('Error fetching pending approvals:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching pending approvals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!authLoading && user) {
-      const stored = localStorage.getItem(key);
-      if (stored) {
-        try {
-          setApprovals(JSON.parse(stored));
-        } catch (e) {
-          console.error('Error parsing pending approvals:', e);
-          setApprovals([]);
-        }
-      } else {
-        // If nothing is stored yet, initialize with the default DataApprovals.
-        setApprovals(DataApprovals);
-      }
-      setLoading(false);
+      fetchApprovals();
     }
-  }, [authLoading, user, key]);
+  }, [authLoading, user]);
 
-  useEffect(() => {
-    if (!loading) {
-      localStorage.setItem(key, JSON.stringify(approvals));
-    }
-  }, [approvals, key, loading]);
-
+  // A simple state update helper for a single approval.
   const updateApproval = (id: number, updated: Approval) => {
     setApprovals((prev) => prev.map((a) => (a.id === id ? updated : a)));
   };
 
-  const approveApproval = (ids: number[] | number) => {
+  // Approve one or more approvals via the API.
+  const approveApproval = async (ids: number[] | number) => {
     const idArr = Array.isArray(ids) ? ids : [ids];
-    setApprovals((prev) =>
-      prev.map((a) => {
-        if (idArr.includes(a.id)) {
-          const currentUserEmail = user?.email;
-          if (!currentUserEmail) return a;
-          const newApprovers = a.approvers.map((approver) =>
-            approver.email === currentUserEmail
-              ? { ...approver, didApprove: true }
-              : approver
-          );
-          const allApproved = newApprovers.every((appr) => appr.didApprove);
-          return {
-            ...a,
-            approvers: newApprovers,
-            status: allApproved ? 'approved' : a.status,
-          };
-        }
-        return a;
-      })
-    );
+    try {
+      await Promise.all(
+        idArr.map((id) =>
+          fetch(`/api/approvals/incoming/${id}/approve`, { method: 'PATCH' })
+        )
+      );
+      // After the action, refresh the pending approvals.
+      fetchApprovals();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const denyApproval = (ids: number[] | number) => {
+  // Deny one or more approvals via the API.
+  const denyApproval = async (ids: number[] | number) => {
     const idArr = Array.isArray(ids) ? ids : [ids];
-    setApprovals((prev) =>
-      prev.map((a) => {
-        if (idArr.includes(a.id)) {
-          const currentUserEmail = user?.email;
-          if (!currentUserEmail) return a;
-          const newApprovers = a.approvers.map((approver) =>
-            approver.email === currentUserEmail
-              ? { ...approver, didApprove: false }
-              : approver
-          );
-          return { ...a, approvers: newApprovers, status: 'rejected' };
-        }
-        return a;
-      })
-    );
+    try {
+      await Promise.all(
+        idArr.map((id) =>
+          fetch(`/api/approvals/incoming/${id}/deny`, { method: 'PATCH' })
+        )
+      );
+      // After the action, refresh the pending approvals.
+      fetchApprovals();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return {
@@ -93,6 +75,6 @@ export function usePendingApprovals() {
     updateApproval,
     approveApproval,
     denyApproval,
-    setApprovals,
+    refresh: fetchApprovals,
   };
 }
