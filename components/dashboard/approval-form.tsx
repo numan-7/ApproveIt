@@ -114,6 +114,9 @@ export function ApprovalForm() {
 
   const handleDeleteAttachment = async (attachmentKey: string) => {
     setDeletingFileKey(attachmentKey);
+
+    console.log(attachmentKey)
+
     try {
       if (!editId) {
         const res = await fetch('/api/uploadthing', {
@@ -127,19 +130,10 @@ export function ApprovalForm() {
           setDeletingFileKey(null);
           return;
         }
-      } else {
-        const res = await fetch(
-          `/api/approvals/${editId}/attachment/${attachmentKey}`,
-          { method: 'DELETE' }
-        );
-        if (!res.ok) {
-          const errData = await res.json();
-          setError(errData.error || 'Failed to delete attachment');
-          setDeletingFileKey(null);
-          return;
-        }
       }
-      setAttachments((prev) => prev.filter((att) => att.key !== attachmentKey));
+      setAttachments((prevAttachments) =>
+        prevAttachments.filter((att) => att.key !== attachmentKey)
+      );
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -147,8 +141,10 @@ export function ApprovalForm() {
     }
   };
 
+  console.log(approvals)
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault(); 
     setError('');
 
     if (approvers.length === 0) {

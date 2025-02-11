@@ -1,5 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClientForServer } from '@/utils/supabase/server';
+import { UTApi } from 'uploadthing/server';
+
+export const deleteUTFiles = async (files: string[]) => {
+  const utapi = new UTApi();
+  console.log("here deleting", files)
+  try {
+    await utapi.deleteFiles(files);
+  } catch (error) {
+    console.error('UTAPI: Error deleting files', error);
+    throw error;
+  }
+};
 
 export async function PATCH(
   req: Request,
@@ -42,7 +54,7 @@ export async function PATCH(
   if (Array.isArray(attachments)) {
     const { data: currentAttachments, error: currentAttsError } = await supabase
       .from('attachments')
-      .select('id')
+      .select('id, key')
       .eq('approval_id', id);
 
     if (currentAttsError) {
@@ -55,14 +67,24 @@ export async function PATCH(
     const currentIds = currentAttachments.map((att) => att.id);
     const submittedIds = attachments.map((att) => att.id).filter(Boolean);
 
+    const currentKeys = currentAttachments.map((att) => att.key);
+    const submittedKeys = attachments.map((att) => att.key).filter(Boolean);
+
     const toDelete = currentIds.filter(
       (currId) => !submittedIds.includes(currId)
     );
+
+    const toDeleteKey = currentKeys.filter(
+      (currKey) => !submittedKeys.includes(currKey)
+    );
+
     if (toDelete.length > 0) {
       const { error: deleteError } = await supabase
         .from('attachments')
         .delete()
         .in('id', toDelete);
+
+      deleteUTFiles(toDeleteKey);
 
       if (deleteError) {
         return NextResponse.json(
