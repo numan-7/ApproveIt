@@ -16,7 +16,7 @@ import { SpinnerLoader } from '../ui/spinner-loader';
 import { Badge } from '@/components/ui/badge';
 import { twMerge } from 'tailwind-merge';
 
-import { UploadButton } from '@/utils/uploadthing/uploadthing';
+import { UploadButton, UploadDropzone} from '@/utils/uploadthing/uploadthing';
 
 type Approver = {
   email: string;
@@ -321,7 +321,7 @@ export function ApprovalForm() {
                 setPriority(value as 'high' | 'medium' | 'low')
               }
             >
-              <div className="flex flex-col sm:flex-row sm:space-x-4">
+              <div className="flex flex-col sm:flex-row sm:space-x-4 gap-2">
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="low" id="priority-low" />
                   <Label htmlFor="priority-low">Low</Label>
@@ -340,7 +340,7 @@ export function ApprovalForm() {
           <div className="space-y-2">
             <Label htmlFor="attachments">Attachments</Label>
             <div className="flex flex-col gap-2">
-              <UploadButton
+              <UploadDropzone
                 endpoint="imageUploader"
                 onBeforeUploadBegin={(files: File[]) => {
                   setIsFileUploading(true);
@@ -356,7 +356,7 @@ export function ApprovalForm() {
                   setIsFileUploading(false);
                 }}
                 config={{ cn: twMerge }}
-                className="flex items-start justify-start ut-button:font-dm ut-button:h-9 ut-button:text-sm ut-button:bg-black hover:ut-button:bg-primary/90"
+                className="flex items-center justify-center ut-button:font-dm ut-button:h-9 ut-button:text-sm ut-button:bg-black hover:ut-button:bg-primary/90"
                 disabled={isFileUploading || isSubmitting || !!deletingFileKey}
               />
               {attachments.length > 0 && (
