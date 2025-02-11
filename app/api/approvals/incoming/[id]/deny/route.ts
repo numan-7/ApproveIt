@@ -14,7 +14,6 @@ export async function PATCH(
   if (userError || !user)
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
-  // Fetch the current approvers array for this approval.
   const { data: approval, error: fetchError } = await supabase
     .from('approvals')
     .select('approvers')
@@ -24,13 +23,11 @@ export async function PATCH(
   if (fetchError)
     return NextResponse.json({ error: fetchError.message }, { status: 500 });
 
-  // Modify the approvers array: set did_approve to false for the current user.
   const updatedApprovers = approval.approvers.map((ap: any) =>
-    ap.email === user.email ? { ...ap, did_approve: false } : ap
+    ap.email === user.email ? { ...ap, didApprove: false } : ap
   );
 
-  // Update the approval record with the new approvers array and set status to 'rejected'.
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from('approvals')
     .update({ approvers: updatedApprovers, status: 'rejected' })
     .eq('id', id)
