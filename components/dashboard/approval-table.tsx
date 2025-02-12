@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
+import { convertToLocalTime } from '@/utils/date';
 
 interface ApprovalTableProps {
   approvals: Approval[];
@@ -273,8 +274,8 @@ export function ApprovalTable({
                   <Link
                     href={`/dashboard/approval/${approval.id}?type=${
                       approval.requester === user?.email
-                        ? btoa('outgoing' + " " + user?.email )
-                        : btoa('incoming' + " " + user?.email )
+                        ? btoa('outgoing' + ' ' + user?.email)
+                        : btoa('incoming' + ' ' + user?.email)
                     }`}
                     className="text-blue-600 hover:underline"
                   >
@@ -293,7 +294,7 @@ export function ApprovalTable({
                     .join(', ')}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.date}
+                  {convertToLocalTime(approval.date)}
                 </TableCell>
                 <TableCell className="py-0">
                   <Badge

@@ -21,6 +21,7 @@ import { useMyApprovals } from '@/hooks/useMyApprovals';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import { useAuth } from '@/context/AuthContext';
 import { SpinnerLoader } from '../ui/spinner-loader';
+import { convertToLocalTime } from '@/utils/date';
 
 interface Comment {
   id?: number;
@@ -41,10 +42,12 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const { deleteApproval } = useMyApprovals(false);
-  const { approveApproval, denyApproval} = usePendingApprovals(false);
+  const { approveApproval, denyApproval } = usePendingApprovals(false);
   const [newCommentText, setNewCommentText] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
-  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null);
+  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(
+    null
+  );
   const [editedCommentText, setEditedCommentText] = useState('');
 
   useEffect(() => {
@@ -192,7 +195,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
               {approval.approvers
                 .map((a) => `${a.name}${a.didApprove ? ' (Approved)' : ''}`)
                 .join(', ')}{' '}
-              • {approval.date}
+              • {convertToLocalTime(approval.date)}
             </CardDescription>
           </div>
           <Badge
@@ -284,20 +287,20 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
                           {comment.name || comment.user_email || 'Unknown'}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {comment.date || comment.created_at}
+                          {comment.date
+                            ? convertToLocalTime(comment.date)
+                            : convertToLocalTime(comment.created_at)}
                         </span>
                       </div>
                     )}
 
-                    <div className="pr-12 hover:bg-gray-100">
+                    <div className="pr-12 hover:bg-gray-50/70">
                       {editingCommentIndex === index ? (
                         <Textarea
                           value={editedCommentText}
-                          onChange={(e) =>
-                            setEditedCommentText(e.target.value)
-                          }
+                          onChange={(e) => setEditedCommentText(e.target.value)}
                           rows={1}
-                          className="resize-none border-none focus:outline-none text-sm bg-transparent p-0"
+                          className="resize-none text-sm bg-gray-50 flex items-center justify-between w-full"
                         />
                       ) : (
                         <p className="text-sm break-words">
@@ -308,13 +311,11 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
                     {(comment.user || comment.user_email) ===
                       (user ? user.email : '') && (
-                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex space-x-1">
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 flex space-x-1">
                         {editingCommentIndex === index ? (
-                          <>
+                          <div className="flex flex-col">
                             <Button
-                              onClick={() =>
-                                handleSaveEditedComment(index)
-                              }
+                              onClick={() => handleSaveEditedComment(index)}
                               variant="ghost"
                               size="sm"
                               className="p-1"
@@ -332,7 +333,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
                             >
                               <X className="h-4 w-4" />
                             </Button>
-                          </>
+                          </div>
                         ) : (
                           <>
                             <Button
@@ -350,9 +351,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
                               <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
-                              onClick={() =>
-                                handleDeleteComment(index)
-                              }
+                              onClick={() => handleDeleteComment(index)}
                               variant="ghost"
                               size="sm"
                               className="p-1"
@@ -367,7 +366,9 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
                 );
               })
             ) : (
-              <p className="text-sm text-gray-500 flex items-center justify-center">No comments yet.</p>
+              <p className="text-sm text-gray-500 flex items-center justify-center">
+                No comments yet.
+              </p>
             )}
           </ScrollArea>
 
