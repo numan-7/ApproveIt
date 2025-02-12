@@ -38,7 +38,7 @@ export function ApprovalTable({
   onDelete,
 }: ApprovalTableProps) {
   const [search, setSearch] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const router = useRouter();
@@ -49,7 +49,7 @@ export function ApprovalTable({
       .toLowerCase()
       .includes(search.toLowerCase());
     const matchesPriority =
-      priorityFilter === '' || approval.priority === priorityFilter;
+      statusFilter === '' || approval.status === statusFilter;
     return matchesSearch && matchesPriority;
   });
 
@@ -174,14 +174,14 @@ export function ApprovalTable({
         <div className="relative inline-block w-full md:w-auto">
           <Filter className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
           <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
             className="border border-gray-300 rounded-md py-1 text-sm pl-8 pr-2 appearance-none cursor-pointer hover:bg-gray-50 w-full md:w-auto"
           >
-            <option value="">All Priorities</option>
-            <option value="high">High</option>
-            <option value="medium">Medium</option>
-            <option value="low">Low</option>
+            <option value="">All Status</option>
+            <option value="pending">pending</option>
+            <option value="approved">approved</option>
+            <option value="rejected">rejected</option>
           </select>
         </div>
 

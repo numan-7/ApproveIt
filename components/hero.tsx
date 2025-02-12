@@ -48,7 +48,7 @@ export default function Hero({ openSidebar }: HeroProps) {
             <span className="inline-block">Approvals</span>
           </h1>
           <p className="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed max-w-2xl">
-            Transform your workflow with intelligent approval management. Get
+            Transform your workflow with streamlined approval management. Get
             instant visibility and control.
           </p>
           <Button
