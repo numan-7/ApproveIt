@@ -183,7 +183,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   };
 
   return (
-    <Card className="overflow-hidden border border-gray-200 mb-4">
+    <Card className="overflow-hidden border border-gray-200 h-full">
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div className="w-full">
@@ -289,6 +289,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
                         <span className="text-xs text-gray-500">
                           {comment.date
                             ? convertToLocalTime(comment.date)
+                            // @ts-ignore
                             : convertToLocalTime(comment.created_at)}
                         </span>
                       </div>
