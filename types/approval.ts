@@ -16,7 +16,15 @@ export interface Comment {
 interface Approvers {
   email: string;
   name: string;
-  didApprove: boolean;
+  didApprove: boolean | null;
+}
+
+export interface Events {
+  approval_id: string;
+  date: string;
+  id: string;
+  name: string;
+  type: string;
 }
 
 export interface Approval {
@@ -29,6 +37,7 @@ export interface Approval {
   status: 'pending' | 'approved' | 'rejected';
   priority: 'high' | 'medium' | 'low';
   comments: Comment[];
+  events: Events[];
   attachments: Attachment[];
   expanded?: boolean;
 }

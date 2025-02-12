@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 
-export function usePendingApprovals(runUseEffect=true) {
+export function usePendingApprovals(runUseEffect = true) {
   const { user, loading: authLoading } = useAuth();
   const [approvals, setApprovals] = useState<Approval[]>([]);
   const [loading, setLoading] = useState(true ? runUseEffect : false);
@@ -49,6 +49,16 @@ export function usePendingApprovals(runUseEffect=true) {
     }
   };
 
+  const viewedApproval = async (approvalID: number) => {
+    try {
+      await fetch(`/api/approvals/incoming/${approvalID}/event`, {
+        method: 'PATCH',
+      });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const denyApproval = async (ids: number[] | number) => {
     const idArr = Array.isArray(ids) ? ids : [ids];
     try {
@@ -70,5 +80,6 @@ export function usePendingApprovals(runUseEffect=true) {
     approveApproval,
     denyApproval,
     refresh: fetchApprovals,
+    viewedApproval,
   };
 }

@@ -176,14 +176,16 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
   const handleApproveApproval = () => {
     approveApproval(approval.id);
+    router.back();
   };
 
   const handleDenyApproval = () => {
     denyApproval(approval.id);
+    router.back();
   };
 
   return (
-    <Card className="overflow-hidden border border-gray-200 h-full">
+    <Card className="overflow-hidden border border-gray-200 h-full font-dm flex flex-col">
       <CardHeader className="pb-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div className="w-full">
@@ -210,7 +212,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="grid gap-6">
+      <CardContent className="grid gap-6 flex-grow">
         <div>
           <h3 className="font-medium mb-2">Description</h3>
           <p className="text-sm break-words">{approval.description}</p>
@@ -289,8 +291,8 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
                         <span className="text-xs text-gray-500">
                           {comment.date
                             ? convertToLocalTime(comment.date)
-                            // @ts-ignore
-                            : convertToLocalTime(comment.created_at)}
+                            : // @ts-ignore
+                              convertToLocalTime(comment.created_at)}
                         </span>
                       </div>
                     )}
@@ -394,53 +396,54 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col sm:flex-row gap-2">
-        {approval.requester === (user ? user.email : '') ? (
-          <>
-            <Button
-              onClick={handleEditApproval}
-              variant="outline"
-              className="w-full sm:w-1/2 sm:h-full"
-            >
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit Approval
-            </Button>
-            <Button
-              onClick={handleDeleteApproval}
-              variant="destructive"
-              className="w-full sm:w-1/2 sm:h-full"
-            >
-              <X className="mr-2 h-4 w-4" />
-              Delete Approval
-            </Button>
-          </>
-        ) : (
-          <>
-            {currentUserApprover && (
-              <>
-                <Button
-                  onClick={handleApproveApproval}
-                  variant="outline"
-                  className="w-full sm:w-1/2 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
-                  disabled={
-                    !!currentUserApprover.didApprove ||
-                    approval.status !== 'pending'
-                  }
-                >
-                  {currentUserApprover.didApprove ? 'Approved' : 'Approve'}
-                </Button>
-                <Button
-                  onClick={handleDenyApproval}
-                  variant="destructive"
-                  className="w-full sm:w-1/2"
-                  disabled={approval.status !== 'pending'}
-                >
-                  Reject
-                </Button>
-              </>
-            )}
-          </>
-        )}
+      <CardFooter className="mt-auto flex flex-col sm:flex-row gap-2 justify-end">
+        <div className="flex flex-col justify-end h-full sm:flex-row gap-2 w-full">
+          {approval.requester === (user ? user.email : '') ? (
+            <>
+              <Button
+                onClick={handleEditApproval}
+                variant="outline"
+                className="w-full sm:w-1/2 sm:h-full"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Approval
+              </Button>
+              <Button
+                onClick={handleDeleteApproval}
+                variant="destructive"
+                className="w-full sm:w-1/2 sm:h-full"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Delete Approval
+              </Button>
+            </>
+          ) : (
+            <>
+              {currentUserApprover && (
+                <>
+                  <Button
+                    onClick={handleApproveApproval}
+                    variant="outline"
+                    className="w-full sm:w-1/2 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
+                    disabled={currentUserApprover.didApprove == true}
+                  >
+                    {currentUserApprover.didApprove ? 'Approved' : 'Approve'}
+                  </Button>
+                  <Button
+                    onClick={handleDenyApproval}
+                    variant="destructive"
+                    className="w-full sm:w-1/2"
+                    disabled={currentUserApprover.didApprove === false}
+                  >
+                    {currentUserApprover.didApprove === false
+                      ? 'Rejected'
+                      : 'Reject'}
+                  </Button>
+                </>
+              )}
+            </>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

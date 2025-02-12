@@ -31,7 +31,7 @@ export async function PATCH(
     (ap: any) => ap.didApprove === false
   );
 
-  const status = allRejected ? 'denied' : 'pending';
+  const status = allRejected ? 'rejected' : 'pending';
 
   const { error } = await supabase
     .from('approvals')
@@ -39,19 +39,22 @@ export async function PATCH(
     .eq('id', id)
     .select();
 
-  if (error)
+  if (error) {
+    console.error('Error updating approval:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   const { error: eventError } = await supabase.from('events').insert([
     {
-      type: 'denied',
+      type: 'rejected',
       name: user.user_metadata.full_name,
       approval_id: id,
     },
   ]);
 
-  if (eventError)
+  if (eventError) {
     return NextResponse.json({ error: eventError.message }, { status: 500 });
+  }
 
-  return NextResponse.json({ message: 'Approval denied' });
+  return NextResponse.json({ message: 'Approval rejected' });
 }

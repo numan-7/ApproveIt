@@ -142,9 +142,9 @@ export function ApprovalTable({
         (ap) => ap.email.toLowerCase() === user?.email.toLowerCase()
       );
 
-      if (approver) {
+      if (approver && approval.status !== 'pending') {
         // @ts-ignore
-        if (approver.didApprove === true || approver.did_approve === true) {
+        if (approver.didApprove === true) {
           hasApproved = true;
         } else {
           hasDenied = true;
@@ -156,6 +156,7 @@ export function ApprovalTable({
   };
 
   const { hasApproved, hasDenied } = getUserApprovalStatus();
+  console.log(hasApproved, hasDenied);
 
   return (
     <div>
@@ -206,7 +207,7 @@ export function ApprovalTable({
                   size="sm"
                   variant="outline"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
-                  disabled={hasDenied}
+                  disabled={hasApproved}
                 >
                   <Check className="w-4 h-4" />
                   Approve
@@ -216,7 +217,7 @@ export function ApprovalTable({
                   size="sm"
                   variant="destructive"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
-                  disabled={hasApproved}
+                  disabled={hasDenied}
                 >
                   <X className="w-4 h-4" />
                   Deny

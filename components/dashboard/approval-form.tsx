@@ -16,12 +16,12 @@ import { SpinnerLoader } from '../ui/spinner-loader';
 import { Badge } from '@/components/ui/badge';
 import { twMerge } from 'tailwind-merge';
 
-import { UploadButton, UploadDropzone} from '@/utils/uploadthing/uploadthing';
+import { UploadButton, UploadDropzone } from '@/utils/uploadthing/uploadthing';
 
 type Approver = {
   email: string;
   name: string;
-  didApprove: boolean;
+  didApprove: boolean | null;
 };
 
 export function ApprovalForm() {
@@ -111,8 +111,13 @@ export function ApprovalForm() {
     });
     setAttachments((prev) => [...prev, ...newAttachments]);
 
-    const existingKeys = JSON.parse(localStorage.getItem('unsubmittedFiles') || '[]');
-    const updatedKeys = [...existingKeys, ...newAttachments.map((file) => file.key)];
+    const existingKeys = JSON.parse(
+      localStorage.getItem('unsubmittedFiles') || '[]'
+    );
+    const updatedKeys = [
+      ...existingKeys,
+      ...newAttachments.map((file) => file.key),
+    ];
     localStorage.setItem('unsubmittedFiles', JSON.stringify(updatedKeys));
   };
 
@@ -137,8 +142,12 @@ export function ApprovalForm() {
         prevAttachments.filter((att) => att.key !== attachmentKey)
       );
 
-      const existingKeys = JSON.parse(localStorage.getItem('unsubmittedFiles') || '[]');
-      const updatedKeys = existingKeys.filter((key: string) => key !== attachmentKey);
+      const existingKeys = JSON.parse(
+        localStorage.getItem('unsubmittedFiles') || '[]'
+      );
+      const updatedKeys = existingKeys.filter(
+        (key: string) => key !== attachmentKey
+      );
       localStorage.setItem('unsubmittedFiles', JSON.stringify(updatedKeys));
     } catch (error: any) {
       setError(error.message);
@@ -148,7 +157,7 @@ export function ApprovalForm() {
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
+    e.preventDefault();
     setError('');
 
     if (approvers.length === 0) {
@@ -171,7 +180,6 @@ export function ApprovalForm() {
       description,
       requester: user?.email ?? 'unknown',
       approvers,
-      date: new Date().toLocaleDateString(),
       status: 'pending',
       priority,
       comments: [],
@@ -206,7 +214,7 @@ export function ApprovalForm() {
     if (!approvers.some((a) => a.email === newApprover)) {
       setApprovers([
         ...approvers,
-        { email: newApprover, name: newApprover, didApprove: false },
+        { email: newApprover, name: newApprover, didApprove: null },
       ]);
       setNewApprover('');
       setError('');
@@ -226,7 +234,9 @@ export function ApprovalForm() {
 
   useEffect(() => {
     return () => {
-      const unsubmittedFiles = JSON.parse(localStorage.getItem('unsubmittedFiles') || '[]');
+      const unsubmittedFiles = JSON.parse(
+        localStorage.getItem('unsubmittedFiles') || '[]'
+      );
       if (unsubmittedFiles.length > 0) {
         unsubmittedFiles.forEach(async (fileKey: string) => {
           try {
@@ -302,7 +312,9 @@ export function ApprovalForm() {
                     size="sm"
                     className="h-auto p-0 ml-2 text-red-700 hover:text-red-700 rounded-sm"
                     onClick={() => removeApprover(approver.email)}
-                    disabled={isFileUploading || isSubmitting || !!deletingFileKey}
+                    disabled={
+                      isFileUploading || isSubmitting || !!deletingFileKey
+                    }
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -342,7 +354,7 @@ export function ApprovalForm() {
                 onBeforeUploadBegin={(files: File[]) => {
                   setIsFileUploading(true);
                   return files;
-                }}            
+                }}
                 // @ts-ignore
                 onClientUploadComplete={(files: FileUpload[]) => {
                   handleUploadComplete(files);
@@ -368,7 +380,9 @@ export function ApprovalForm() {
                           size="sm"
                           className="p-0 text-red-700 hover:text-red-700"
                           onClick={() => handleDeleteAttachment(file.key)}
-                          disabled={isFileUploading || isSubmitting || !!deletingFileKey}
+                          disabled={
+                            isFileUploading || isSubmitting || !!deletingFileKey
+                          }
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -385,7 +399,10 @@ export function ApprovalForm() {
             className="w-full flex items-center justify-center"
             disabled={isSubmitting || isFileUploading || !!deletingFileKey}
           >
-            {isSubmitting || isFileUploading && <Loader2 className="animate-spin h-4 w-4 mr-2" />}
+            {isSubmitting ||
+              (isFileUploading && (
+                <Loader2 className="animate-spin h-4 w-4 mr-2" />
+              ))}
             {editId ? 'Update Approval Request' : 'Create Approval Request'}
           </Button>
         </form>

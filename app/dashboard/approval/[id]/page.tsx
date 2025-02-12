@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ApprovalCard } from '@/components/dashboard/approval-card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,9 @@ import { useAuth } from '@/context/AuthContext';
 import { ApprovalTimeline } from '@/components/dashboard/approval-timeline';
 
 export default function ApprovalDetail() {
+  const [approval, setApproval] = useState<Approval | null>(null);
+  const hasViewedRef = useRef(false);
+
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,10 +31,11 @@ export default function ApprovalDetail() {
 
   const { approvals: myApprovals, loading: myApprovalsLoading } =
     useMyApprovals(true ? decodedType == 'outgoing' : false);
-  const { approvals: pendingApprovals, loading: pendingApprovalsLoading } =
-    usePendingApprovals(true ? decodedType == 'incoming' : false);
-
-  const [approval, setApproval] = useState<Approval | null>(null);
+  const {
+    viewedApproval,
+    approvals: pendingApprovals,
+    loading: pendingApprovalsLoading,
+  } = usePendingApprovals(true ? decodedType == 'incoming' : false);
 
   const isLoading = myApprovalsLoading || pendingApprovalsLoading;
 
@@ -42,6 +46,15 @@ export default function ApprovalDetail() {
         (a) => a.id.toString() === params.id.toString()
       );
       setApproval(foundApproval ?? null);
+
+      if (
+        !hasViewedRef.current &&
+        decodedType === 'incoming' &&
+        foundApproval
+      ) {
+        viewedApproval(foundApproval.id);
+        hasViewedRef.current = true;
+      }
     }
   }, [isLoading, myApprovals, pendingApprovals, params.id]);
 
@@ -57,69 +70,6 @@ export default function ApprovalDetail() {
     );
   }
 
-  const mockEvents = [
-    {
-      id: 1,
-      type: 'viewed',
-      user: 'Numan Khan',
-      date: '2025-02-11T20:30:00.000Z',
-    },
-    {
-      id: 2,
-      type: 'viewed',
-      user: 'John Khan',
-      date: '2025-02-11T20:30:00.000Z',
-    },
-    {
-      id: 3,
-      type: 'approved',
-      user: 'John Khan',
-      date: '2025-02-11T21:00:00.000Z',
-    },
-    {
-      id: 4,
-      type: 'viewed',
-      user: 'Em Khan',
-      date: '2025-02-11T21:15:00.000Z',
-    },
-    {
-      id: 5,
-      type: 'denied',
-      user: 'Em Khan',
-      date: '2025-02-11T21:15:00.000Z',
-    },
-    {
-      id: 6,
-      type: 'approved',
-      user: 'Numan Khan',
-      date: '2025-02-11T21:15:00.000Z',
-    },
-    {
-      id: 7,
-      type: 'viewed',
-      user: 'Em Khan',
-      date: '2025-02-11T21:15:00.000Z',
-    },
-    {
-      id: 8,
-      type: 'denied',
-      user: 'Em Khan',
-      date: '2025-02-11T21:15:00.000Z',
-    },
-    {
-      id: 9,
-      type: 'approved',
-      user: 'Numan Khan',
-      date: '2025-02-11T21:15:00.000Z',
-    },
-    {
-      id: 10,
-      type: 'approved',
-      user: 'Numan Khan',
-      date: '2025-02-11T21:15:00.000Z',
-    },
-  ];
-
   return (
     <div className="p-4 space-y-4 h-screen">
       <div className="space-y-4 mb-4">
@@ -134,7 +84,7 @@ export default function ApprovalDetail() {
           Back
         </Button>
       </div>
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:flex-row gap-4 lg:pb-4">
         <div
           className={`w-full ${decodedType === 'outgoing' ? 'lg:w-3/4' : ''}`}
         >
@@ -142,7 +92,7 @@ export default function ApprovalDetail() {
         </div>
         {decodedType === 'outgoing' && (
           <div className="w-full lg:w-1/4">
-            <ApprovalTimeline events={mockEvents} />
+            <ApprovalTimeline events={approval.events} />
           </div>
         )}
       </div>
