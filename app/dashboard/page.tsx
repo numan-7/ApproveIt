@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, ClipboardList, CheckSquare } from 'lucide-react';
+import { PlusCircle, ClipboardList, CheckSquare, Clock } from 'lucide-react';
 import { SummaryCards } from '@/components/dashboard/summary-cards';
 import { useEffect, useState } from 'react';
 import { SpinnerLoader } from '@/components/ui/spinner-loader';
+import { ApprovalDashboardTimeline } from '@/components/dashboard/approval-dashboard-timeline';
 
 export default function Dashboard() {
   interface ApprovalNumbers {
@@ -40,8 +41,74 @@ export default function Dashboard() {
 
   if (isLoading) return <SpinnerLoader />;
 
+  const mockRecentEvents = [
+    {
+      id: 1,
+      type: 'viewed',
+      user: 'alice@example.com',
+      date: '2025-02-11T20:30:00.000Z',
+      approvalName: 'Budget Approval',
+    },
+    {
+      id: 2,
+      type: 'approved',
+      user: 'bob@example.com',
+      date: '2025-02-11T21:00:00.000Z',
+      approvalName: 'Project X Kickoff',
+    },
+    {
+      id: 3,
+      type: 'rejected',
+      user: 'charlie@example.com',
+      date: '2025-02-11T21:15:00.000Z',
+      approvalName: 'New Hire Request',
+    },
+    {
+      id: 4,
+      type: 'viewed',
+      user: 'david@example.com',
+      date: '2025-02-11T22:00:00.000Z',
+      approvalName: 'Marketing Campaign',
+    },
+    {
+      id: 5,
+      type: 'approved',
+      user: 'eve@example.com',
+      date: '2025-02-12T09:00:00.000Z',
+      approvalName: 'Software License Renewal',
+    },
+    {
+      id: 6,
+      type: 'approved',
+      user: 'eve@example.com',
+      date: '2025-02-12T09:00:00.000Z',
+      approvalName: 'Software License Renewal',
+    },
+    {
+      id: 7,
+      type: 'approved',
+      user: 'eve@example.com',
+      date: '2025-02-12T09:00:00.000Z',
+      approvalName: 'Software License Renewal',
+    },
+    {
+      id: 8,
+      type: 'approved',
+      user: 'eve@example.com',
+      date: '2025-02-12T09:00:00.000Z',
+      approvalName: 'Software License Renewal',
+    },
+    {
+      id: 9,
+      type: 'approved',
+      user: 'eve@example.com',
+      date: '2025-02-12T09:00:00.000Z',
+      approvalName: 'Software License Renewal',
+    },
+  ];
+
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-3 min-h-screen md:flex md:flex-col">
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
       <SummaryCards
@@ -105,6 +172,17 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+      <Card className="flex flex-col md:flex-1">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Clock className="mr-2 h-5 w-5 text-purple-500" />
+            Recent Approval Events
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-hidden">
+          <ApprovalDashboardTimeline events={mockRecentEvents} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

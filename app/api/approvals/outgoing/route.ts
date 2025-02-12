@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
   const body = await req.json();
-  const { name, description, priority, date, approvers, attachments } = body;
+  const { name, description, priority, approvers, attachments } = body;
 
   if (attachments) {
     if (!Array.isArray(attachments))
@@ -84,7 +84,6 @@ export async function POST(req: Request) {
         requester: user.email,
         description,
         priority,
-        date: date || new Date().toISOString(),
         status: 'pending',
         approvers: approvers || [],
       },
