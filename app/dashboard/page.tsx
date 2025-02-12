@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { useEffect, useState } from 'react';
 import { SpinnerLoader } from '@/components/ui/spinner-loader';
 
 export default function Dashboard() {
-
   interface ApprovalNumbers {
     incoming: number;
     outgoing: number;
@@ -18,7 +17,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [approvalStats, setApprovalStats] = useState<ApprovalNumbers>({
     incoming: 0,
-    outgoing: 0
+    outgoing: 0,
   });
 
   useEffect(() => {
@@ -29,7 +28,7 @@ export default function Dashboard() {
           throw new Error(`Response status: ${response.status}`);
         }
         const json = await response.json();
-        setApprovalStats(json)
+        setApprovalStats(json);
       } catch (error) {
         console.error('Error fetching approvals:', error);
       } finally {
@@ -38,14 +37,17 @@ export default function Dashboard() {
     };
     fetchStats();
   }, []);
-  
-  if (isLoading) return <SpinnerLoader />
+
+  if (isLoading) return <SpinnerLoader />;
 
   return (
     <div className="p-4 space-y-4">
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      <SummaryCards myRequestsCount={approvalStats.outgoing} pendingApprovalsCount={approvalStats.incoming} />
+      <SummaryCards
+        myRequestsCount={approvalStats.outgoing}
+        pendingApprovalsCount={approvalStats.incoming}
+      />
 
       <div className="grid md:grid-cols-3 gap-6">
         <Card>

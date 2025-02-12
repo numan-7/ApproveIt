@@ -27,14 +27,31 @@ export async function PATCH(
     ap.email === user.email ? { ...ap, didApprove: false } : ap
   );
 
+  const allRejected = updatedApprovers.every(
+    (ap: any) => ap.didApprove === false
+  );
+
+  const status = allRejected ? 'denied' : 'pending';
+
   const { error } = await supabase
     .from('approvals')
-    .update({ approvers: updatedApprovers, status: 'rejected' })
+    .update({ approvers: updatedApprovers, status: status })
     .eq('id', id)
     .select();
 
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const { error: eventError } = await supabase.from('events').insert([
+    {
+      type: 'denied',
+      name: user.user_metadata.full_name,
+      approval_id: id,
+    },
+  ]);
+
+  if (eventError)
+    return NextResponse.json({ error: eventError.message }, { status: 500 });
 
   return NextResponse.json({ message: 'Approval denied' });
 }

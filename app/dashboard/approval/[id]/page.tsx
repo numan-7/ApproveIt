@@ -21,7 +21,7 @@ export default function ApprovalDetail() {
   let decodedType = '';
   try {
     decodedType = atob(encodedType);
-    decodedType = decodedType.slice(0,8);
+    decodedType = decodedType.slice(0, 8);
   } catch (error) {
     decodedType = '';
   }
@@ -58,29 +58,86 @@ export default function ApprovalDetail() {
   }
 
   const mockEvents = [
-    { id: 1, type: "viewed", user: "Numan Khan", date: "2025-02-11T20:30:00.000Z" },
-    { id: 2, type: "viewed", user: "John Khan", date: "2025-02-11T20:30:00.000Z" },
-    { id: 3, type: "approved", user: "John Khan", date: "2025-02-11T21:00:00.000Z" },
-    { id: 4, type: "viewed", user: "Em Khan", date: "2025-02-11T21:15:00.000Z" },
-    { id: 5, type: "denied", user: "Em Khan", date: "2025-02-11T21:15:00.000Z" },
-    { id: 6, type: "approved", user: "Numan Khan", date: "2025-02-11T21:15:00.000Z" },
-    { id: 7, type: "viewed", user: "Em Khan", date: "2025-02-11T21:15:00.000Z" },
-    { id: 8, type: "denied", user: "Em Khan", date: "2025-02-11T21:15:00.000Z" },
-    { id: 9, type: "approved", user: "Numan Khan", date: "2025-02-11T21:15:00.000Z" },
-    { id: 10, type: "approved", user: "Numan Khan", date: "2025-02-11T21:15:00.000Z" },
-  ]
+    {
+      id: 1,
+      type: 'viewed',
+      user: 'Numan Khan',
+      date: '2025-02-11T20:30:00.000Z',
+    },
+    {
+      id: 2,
+      type: 'viewed',
+      user: 'John Khan',
+      date: '2025-02-11T20:30:00.000Z',
+    },
+    {
+      id: 3,
+      type: 'approved',
+      user: 'John Khan',
+      date: '2025-02-11T21:00:00.000Z',
+    },
+    {
+      id: 4,
+      type: 'viewed',
+      user: 'Em Khan',
+      date: '2025-02-11T21:15:00.000Z',
+    },
+    {
+      id: 5,
+      type: 'denied',
+      user: 'Em Khan',
+      date: '2025-02-11T21:15:00.000Z',
+    },
+    {
+      id: 6,
+      type: 'approved',
+      user: 'Numan Khan',
+      date: '2025-02-11T21:15:00.000Z',
+    },
+    {
+      id: 7,
+      type: 'viewed',
+      user: 'Em Khan',
+      date: '2025-02-11T21:15:00.000Z',
+    },
+    {
+      id: 8,
+      type: 'denied',
+      user: 'Em Khan',
+      date: '2025-02-11T21:15:00.000Z',
+    },
+    {
+      id: 9,
+      type: 'approved',
+      user: 'Numan Khan',
+      date: '2025-02-11T21:15:00.000Z',
+    },
+    {
+      id: 10,
+      type: 'approved',
+      user: 'Numan Khan',
+      date: '2025-02-11T21:15:00.000Z',
+    },
+  ];
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 h-screen">
       <div className="space-y-4 mb-4">
         <h1 className="text-3xl font-bold">Approval Details</h1>
-        <Button variant="outline" size="sm" className="flex items-center" onClick={() => router.back()}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center"
+          onClick={() => router.back()}
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
       </div>
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className={`w-full ${decodedType === 'outgoing' ? 'lg:w-3/4' : ''}`}>
+        <div
+          className={`w-full ${decodedType === 'outgoing' ? 'lg:w-3/4' : ''}`}
+        >
           <ApprovalCard approval={approval} />
         </div>
         {decodedType === 'outgoing' && (
@@ -90,6 +147,5 @@ export default function ApprovalDetail() {
         )}
       </div>
     </div>
-  );  
+  );
 }
-

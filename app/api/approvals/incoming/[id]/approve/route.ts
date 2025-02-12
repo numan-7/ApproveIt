@@ -29,28 +29,32 @@ export async function PATCH(
     ap.email === user.email ? { ...ap, didApprove: true } : ap
   );
 
+  const allApproved = updatedApprovers.every(
+    (ap: any) => ap.didApprove === true
+  );
+
+  const status = allApproved ? 'approved' : 'pending';
+
   // update the approval record with the new approvers array.
-  const { data: updateData, error: updateError } = await supabase
+  const { error: updateError } = await supabase
     .from('approvals')
-    .update({ approvers: updatedApprovers })
+    .update({ approvers: updatedApprovers, status: status })
     .eq('id', id)
     .select();
 
   if (updateError)
     return NextResponse.json({ error: updateError.message }, { status: 500 });
 
-  // check if every approver has approved.
-  const allApproved = updatedApprovers.every(
-    (ap: any) => ap.didApprove === true
-  );
-  if (allApproved) {
-    const { error: statusError } = await supabase
-      .from('approvals')
-      .update({ status: 'approved' })
-      .eq('id', id);
-    if (statusError)
-      return NextResponse.json({ error: statusError.message }, { status: 500 });
-  }
+  const { error: eventError } = await supabase.from('events').insert([
+    {
+      type: 'approved',
+      name: user.user_metadata.full_name,
+      approval_id: id,
+    },
+  ]);
+
+  if (eventError)
+    return NextResponse.json({ error: eventError.message }, { status: 500 });
 
   return NextResponse.json({ message: 'Approval updated' });
 }
