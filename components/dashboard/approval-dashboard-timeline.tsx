@@ -3,9 +3,9 @@ import { Eye, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ApprovalEvent {
-  id: number;
+  id: string;
   type: string;
-  user: string;
+  name: string;
   date: string;
   approvalName: string;
 }
@@ -58,7 +58,7 @@ export function ApprovalDashboardTimeline({ events }: ApprovalEventsProps) {
               <p className="font-medium">{event.approvalName}</p>
               <p className="text-sm text-gray-600">
                 {event.type.charAt(0).toUpperCase() + event.type.slice(1)} by{' '}
-                {event.user}
+                {event.name}
               </p>
               <p className="text-xs text-gray-500">
                 {new Date(event.date).toLocaleString()}

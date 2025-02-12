@@ -13,12 +13,20 @@ export default function Dashboard() {
   interface ApprovalNumbers {
     incoming: number;
     outgoing: number;
+    recentEvents: {
+      id: string;
+      type: string;
+      name: string;
+      date: string;
+      approvalName: string;
+    }[];
   }
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [approvalStats, setApprovalStats] = useState<ApprovalNumbers>({
     incoming: 0,
     outgoing: 0,
+    recentEvents: [],
   });
 
   useEffect(() => {
@@ -180,7 +188,7 @@ export default function Dashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="overflow-hidden">
-          <ApprovalDashboardTimeline events={mockRecentEvents} />
+          <ApprovalDashboardTimeline events={approvalStats.recentEvents} />
         </CardContent>
       </Card>
     </div>
