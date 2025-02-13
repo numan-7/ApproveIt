@@ -47,9 +47,8 @@ export async function GET(req: Request) {
     name: string;
     date: string;
     approvalName: string;
+    approvalID: string;
   }[] = [];
-
-  console.log(outgoing);
 
   if (outgoing) {
     outgoing.forEach((approval: any) => {
@@ -61,6 +60,7 @@ export async function GET(req: Request) {
             name: event.name,
             date: event.date,
             approvalName: approval.name,
+            approvalID: event.approval_id
           });
         });
       }

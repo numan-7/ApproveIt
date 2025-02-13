@@ -156,7 +156,6 @@ export function ApprovalTable({
   };
 
   const { hasApproved, hasDenied } = getUserApprovalStatus();
-  console.log(hasApproved, hasDenied);
 
   return (
     <div>

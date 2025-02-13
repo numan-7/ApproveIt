@@ -1,5 +1,8 @@
+"use client";
+
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Eye, CheckCircle, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface ApprovalEvent {
@@ -8,6 +11,7 @@ interface ApprovalEvent {
   name: string;
   date: string;
   approvalName: string;
+  approvalID: string;
 }
 
 interface ApprovalEventsProps {
@@ -15,6 +19,9 @@ interface ApprovalEventsProps {
 }
 
 export function ApprovalDashboardTimeline({ events }: ApprovalEventsProps) {
+
+  const router = useRouter();
+
   const getEventIcon = (type: string) => {
     switch (type) {
       case 'viewed':
@@ -43,22 +50,25 @@ export function ApprovalDashboardTimeline({ events }: ApprovalEventsProps) {
 
   return (
     <ScrollArea className="w-full h-[450px]">
-      <div className="space-y-4">
+      <div className="relative pt-4 pr-4">
+        <div className="absolute left-4 top-0 h-full w-0.5 bg-gray-200"></div>
         {events.map((event) => (
-          <div key={event.id} className="flex items-start space-x-4">
+          <div key={event.id} className="relative mb-4 flex items-start">
             <div
               className={cn(
-                'flex items-center justify-center w-8 h-8 rounded-full',
+                'absolute left-4 flex items-center justify-center w-8 h-8 rounded-full -translate-x-1/2 z-10',
                 getEventColor(event.type)
               )}
             >
               {getEventIcon(event.type)}
             </div>
-            <div>
-              <p className="font-medium">{event.approvalName}</p>
+            <div className="ml-12">
+              <p 
+                className="font-medium cursor-pointer hover:underline"
+                onClick={() => {router.push(`dashboard/approval/${event.approvalID}?type=${btoa('outgoing' + ' ' + event.name)}`)}}
+              >{event.approvalName}</p>
               <p className="text-sm text-gray-600">
-                {event.type.charAt(0).toUpperCase() + event.type.slice(1)} by{' '}
-                {event.name}
+                {event.type.charAt(0).toUpperCase() + event.type.slice(1)} by {event.name}
               </p>
               <p className="text-xs text-gray-500">
                 {new Date(event.date).toLocaleString()}
