@@ -51,7 +51,7 @@ export function RetractableSidebar() {
         {
           href: '/dashboard/approvals/create',
           icon: PlusCircle,
-          label: 'Submit New Approval',
+          label: 'Create Approval',
         },
         {
           href: '/dashboard/approvals/incoming',
@@ -88,7 +88,7 @@ export function RetractableSidebar() {
     <div
       ref={sidebarRef}
       className={cn(
-        'fixed top-0 left-0 h-screen flex flex-col z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50',
+        'fixed font-dm top-0 font-bold left-0 h-screen flex flex-col z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50',
         isExpanded ? 'w-64' : 'w-16'
       )}
       style={{
@@ -142,7 +142,7 @@ export function RetractableSidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    'flex items-center p-2 rounded-md text-sm font-medium tracking-wider text-white uppercase transition-colors hover:bg-forest/10',
+                    'flex items-center p-2 rounded-md text-sm font-bold tracking-wider text-white uppercase transition-colors hover:bg-forest/10',
                     pathname === item.href && 'bg-forest/20 text-white',
                     !isExpanded && 'justify-center'
                   )}
@@ -155,7 +155,7 @@ export function RetractableSidebar() {
                   <button
                     onClick={handleApprovalsClick}
                     className={cn(
-                      'flex items-center w-full p-2 rounded-md text-sm font-medium tracking-wider text-white uppercase transition-colors hover:bg-forest/10',
+                      'flex items-center w-full p-2 rounded-md text-sm font-bold tracking-wider text-white uppercase transition-colors hover:bg-forest/10',
                       !isExpanded && 'justify-center'
                     )}
                   >
