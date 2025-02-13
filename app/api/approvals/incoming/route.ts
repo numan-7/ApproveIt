@@ -14,6 +14,7 @@ export async function GET(req: Request) {
   const { data: approvals, error } = await supabase.rpc('get_approvals_for_user', {
     user_email: user.email,
   });
+  
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
 
