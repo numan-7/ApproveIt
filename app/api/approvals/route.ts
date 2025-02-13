@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       priority,
       approvers,
       comments: comments ( id, name, user_email, comment, created_at ),
-      attachments: attachments ( name, type, size, url, key ),
+      attachments: attachments ( name, size, url, key ),
       events: events ( id, date, type, name, approval_id)
     `
     )
@@ -75,6 +75,7 @@ export async function GET(req: Request) {
   const recent10Events = allEvents.slice(0, 10);
 
   if (incomingError) {
+    console.log("Incoming error", incomingError);
     return NextResponse.json({ error: incomingError.message }, { status: 500 });
   } else if (outgoingError) {
     return NextResponse.json({ error: outgoingError.message }, { status: 500 });
