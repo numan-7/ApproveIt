@@ -18,6 +18,7 @@ export default function Dashboard() {
       type: string;
       name: string;
       date: string;
+      approvalID: string;
       approvalName: string;
     }[];
   }

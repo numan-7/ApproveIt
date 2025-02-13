@@ -37,6 +37,7 @@ export async function GET(req: Request) {
     `
     )
     .eq('requester', user.email)
+    .eq('status', 'pending')
     .order('date', { ascending: true });
 
   const incomingApprovalslength = incoming.length || 0;

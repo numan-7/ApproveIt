@@ -20,7 +20,7 @@ export function SummaryCards({
       <Card>
         <CardHeader>
           <CardTitle>My Requests</CardTitle>
-          <CardDescription>Approval requests you've sent out</CardDescription>
+          <CardDescription>Pending approval requests you've sent out</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -35,7 +35,7 @@ export function SummaryCards({
       <Card>
         <CardHeader>
           <CardTitle>Pending My Approval</CardTitle>
-          <CardDescription>Requests waiting for your approval</CardDescription>
+          <CardDescription>Pending approval requests waiting for your approval</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">

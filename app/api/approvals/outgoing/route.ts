@@ -27,7 +27,7 @@ export async function GET(req: Request) {
       priority,
       approvers,
       comments: comments ( id, name, user_email, comment, created_at ),
-      attachments: attachments ( name, type, size, url, key ),
+      attachments: attachments ( name, size, url, key ),
       events: events ( id, date, type, name, approval_id)
     `
     )

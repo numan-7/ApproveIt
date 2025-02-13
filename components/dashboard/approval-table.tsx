@@ -38,7 +38,7 @@ export function ApprovalTable({
   onDelete,
 }: ApprovalTableProps) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('pending');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const router = useRouter();
@@ -179,9 +179,9 @@ export function ApprovalTable({
             className="border border-gray-300 rounded-md py-1 text-sm pl-8 pr-2 appearance-none cursor-pointer hover:bg-gray-50 w-full md:w-auto"
           >
             <option value="">All Status</option>
-            <option value="pending">pending</option>
-            <option value="approved">approved</option>
-            <option value="rejected">rejected</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
         </div>
 
