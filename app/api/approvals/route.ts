@@ -38,11 +38,10 @@ export async function GET(req: Request) {
     `
     )
     .eq('requester', user.email)
-    .eq('status', 'pending')
     .order('date', { ascending: true });
 
-  const incomingApprovalslength = incoming.length || 0;
-  const outgoingApprovalslength = outgoing?.length || 0;
+  const incomingApprovalslength = incoming.filter((incoming: any) => incoming.status === 'pending').length;
+  const outgoingApprovalslength = outgoing?.filter((outgoing: any) => outgoing.status === 'pending').length;
 
   let allEvents: {
     id: string;

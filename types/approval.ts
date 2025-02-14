@@ -6,10 +6,12 @@ export interface Attachment {
 }
 
 export interface Comment {
-  id?: number;
-  user: string;
-  text: string;
-  date: string;
+  id: string;
+  approval_id: string;
+  user_email: string;
+  comment: string;
+  created_at: Date;
+  name: string;
 }
 
 interface Approvers {

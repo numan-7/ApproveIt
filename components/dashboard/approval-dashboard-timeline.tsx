@@ -21,6 +21,8 @@ interface ApprovalEventsProps {
 export function ApprovalDashboardTimeline({ events }: ApprovalEventsProps) {
   const router = useRouter();
 
+  events = events.reverse(); // order come in descending order for some fufcking reason
+
   const getEventIcon = (type: string) => {
     switch (type) {
       case 'viewed':

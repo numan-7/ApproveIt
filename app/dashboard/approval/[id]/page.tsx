@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ApprovalCard } from '@/components/dashboard/approval-card';
+import { ApprovalTimeline } from '@/components/dashboard/approval-timeline';
 import { Button } from '@/components/ui/button';
 import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import { ArrowLeft } from 'lucide-react';
@@ -10,10 +11,11 @@ import type { Approval } from '@/types/approval';
 import { useMyApprovals } from '@/hooks/useMyApprovals';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import { useAuth } from '@/context/AuthContext';
-import { ApprovalTimeline } from '@/components/dashboard/approval-timeline';
+import { CommentsCard } from '@/components/dashboard/approval-comments';
 
 export default function ApprovalDetail() {
   const [approval, setApproval] = useState<Approval | null>(null);
+  const [comments, setComments] = useState<any[]>([]);
   const hasViewedRef = useRef(false);
 
   const params = useParams();
@@ -30,12 +32,12 @@ export default function ApprovalDetail() {
   }
 
   const { approvals: myApprovals, loading: myApprovalsLoading } =
-    useMyApprovals(true ? decodedType == 'outgoing' : false);
+    useMyApprovals(decodedType === 'outgoing');
   const {
     viewedApproval,
     approvals: pendingApprovals,
     loading: pendingApprovalsLoading,
-  } = usePendingApprovals(true ? decodedType == 'incoming' : false);
+  } = usePendingApprovals(decodedType === 'incoming');
 
   const isLoading = myApprovalsLoading || pendingApprovalsLoading;
 
@@ -56,7 +58,13 @@ export default function ApprovalDetail() {
         hasViewedRef.current = true;
       }
     }
-  }, [isLoading, myApprovals, pendingApprovals, params.id]);
+  }, [isLoading, myApprovals, pendingApprovals, params.id, decodedType, viewedApproval]);
+
+  useEffect(() => {
+    if (approval) {
+      setComments(approval.comments || []);
+    }
+  }, [approval]);
 
   if (isLoading) {
     return <SpinnerLoader />;
@@ -69,6 +77,42 @@ export default function ApprovalDetail() {
       </div>
     );
   }
+
+  const handleAddComment = async (text: string) => {
+    try {
+      const res = await fetch(`/api/approvals/${approval.id}/comment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comment: text }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // API returns an array with the new comment object
+        const newComment = data[0];
+        setComments((prev) => [...prev, newComment]);
+      } else {
+        console.error('Error adding comment:', data.error);
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const res = await fetch(`/api/approvals/${approval.id}/comment/${commentId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+      } else {
+        console.error('Error deleting comment:', data.error);
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
 
   return (
     <div className="p-4 space-y-4 h-screen">
@@ -85,16 +129,19 @@ export default function ApprovalDetail() {
         </Button>
       </div>
       <div className="flex flex-col lg:flex-row gap-4 lg:pb-4">
-        <div
-          className={`w-full ${decodedType === 'outgoing' ? 'lg:w-3/4' : ''}`}
-        >
+        <div className="w-full lg:w-2/3 space-y-8">
           <ApprovalCard approval={approval} />
-        </div>
-        {decodedType === 'outgoing' && (
-          <div className="w-full lg:w-1/4">
+          {decodedType === 'outgoing' && (
             <ApprovalTimeline events={approval.events} />
-          </div>
-        )}
+          )}
+        </div>
+        <div className="w-full lg:w-1/3">
+          <CommentsCard
+            comments={comments}
+            onAddComment={handleAddComment}
+            onDeleteComment={handleDeleteComment}
+          />
+        </div>
       </div>
     </div>
   );
