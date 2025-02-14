@@ -75,6 +75,17 @@ export function UpcomingApprovalsCalendar({
     );
   };
 
+  const getBackgroundForStatus = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100';
+      case 'rejected':
+        return 'bg-red-100';
+      default:
+        return 'bg-gray-100';
+    }
+  };
+
   const oneWeekFromNow = new Date();
   oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
   const approvalsWithinWeek = approvals
@@ -155,8 +166,8 @@ export function UpcomingApprovalsCalendar({
                             return (
                               <li
                                 key={approval.id}
-                                className="text-sm mb-2 hover:bg-gray-100 bg-gray-50
-                                p-1 rounded cursor-pointer"
+                                className={`text-sm mb-2 hover:bg-gray-100 bg-gray-50
+                                p-1 rounded cursor-pointer`}
                                 onClick={() => {
                                   router.push(
                                     `dashboard/approval/${approval.id}?type=${btoa(type + ' ' + approval.name)}`
@@ -166,11 +177,10 @@ export function UpcomingApprovalsCalendar({
                                 <div className="flex items-center justify-between">
                                   <span>{approval.name}</span>
                                   <Badge
-                                    variant={
-                                      type === 'incoming'
-                                        ? 'default'
-                                        : 'outline'
-                                    }
+                                    variant="outline"
+                                    className={`${getBackgroundForStatus(
+                                      approval.status
+                                    )}`}
                                   >
                                     {type === 'incoming' ? (
                                       <ArrowDownLeft className="h-3 w-3 mr-1" />
@@ -219,7 +229,8 @@ export function UpcomingApprovalsCalendar({
                           </p>
                         </div>
                         <Badge
-                          variant={type === 'incoming' ? 'default' : 'outline'}
+                          variant="outline"
+                          className={`${getBackgroundForStatus(approval.status)}`}
                         >
                           {type === 'incoming' ? (
                             <ArrowDownLeft className="h-3 w-3 mr-1" />

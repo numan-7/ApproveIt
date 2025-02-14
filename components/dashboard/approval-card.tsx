@@ -113,15 +113,7 @@ function ApprovalDetailsCard({ approval }: ApprovalDetailsCardProps) {
               {approval.priority.toUpperCase()} PRIORITY
             </Badge>
             <Badge
-              variant={
-                approval.status === 'pending'
-                  ? 'secondary'
-                  : approval.status === 'approved'
-                    ? 'default'
-                    : approval.status === 'rejected'
-                      ? 'destructive'
-                      : 'outline'
-              }
+              variant="outline"
               className="text-sm font-semibold text-center flex items-center justify-center"
             >
               {approval.status.toUpperCase()}
