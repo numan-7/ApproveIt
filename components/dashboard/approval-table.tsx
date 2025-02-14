@@ -255,7 +255,7 @@ export function ApprovalTable({
               <TableHead className="w-1/6">Name</TableHead>
               <TableHead className="w-1/6">Requester</TableHead>
               <TableHead className="w-1/6">Description</TableHead>
-              <TableHead className="w-[calc(100%/24)]">Approvers #</TableHead>
+              <TableHead className="w-[calc(100%/20)]">Approvers #</TableHead>
               <TableHead className="w-[calc(100%/24)]">Created</TableHead>
               <TableHead className="w-1/12">Due By</TableHead>
               <TableHead className="w-[calc(100%/24)]">Priority</TableHead>
