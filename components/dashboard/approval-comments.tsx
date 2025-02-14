@@ -1,12 +1,18 @@
 'use client';
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, Send, Trash2 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, Send, Trash2 } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export interface Comment {
   id: string;
@@ -23,14 +29,18 @@ interface CommentsCardProps {
   onDeleteComment: (commentId: string) => Promise<void>;
 }
 
-export function CommentsCard({ comments, onAddComment, onDeleteComment }: CommentsCardProps) {
-  const [newComment, setNewComment] = useState("");
+export function CommentsCard({
+  comments,
+  onAddComment,
+  onDeleteComment,
+}: CommentsCardProps) {
+  const [newComment, setNewComment] = useState('');
   const { user } = useAuth();
 
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
     await onAddComment(newComment);
-    setNewComment("");
+    setNewComment('');
   };
 
   return (
@@ -47,7 +57,9 @@ export function CommentsCard({ comments, onAddComment, onDeleteComment }: Commen
             comments.map((comment, index) => {
               const previousComment = index > 0 ? comments[index - 1] : null;
               const currentTime = new Date(comment.created_at).getTime();
-              const previousTime = previousComment ? new Date(previousComment.created_at).getTime() : 0;
+              const previousTime = previousComment
+                ? new Date(previousComment.created_at).getTime()
+                : 0;
               const showHeader =
                 !previousComment ||
                 previousComment.user_email !== comment.user_email ||
@@ -64,11 +76,13 @@ export function CommentsCard({ comments, onAddComment, onDeleteComment }: Commen
                     </div>
                   )}
                   <div className="relative group">
-                    <p className="text-sm text-gray-700">{comment.comment}</p>
+                    <p className="text-sm text-gray-700 hover:bg-gray-50">
+                      {comment.comment}
+                    </p>
                     {user && user.email === comment.user_email && (
                       <button
                         onClick={() => onDeleteComment(comment.id)}
-                        className="absolute right-0 top-0 hidden group-hover:block p-1"
+                        className="absolute right-0 top-0 hidden text-red-500 group-hover:block"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

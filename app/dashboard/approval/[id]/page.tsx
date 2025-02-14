@@ -58,7 +58,14 @@ export default function ApprovalDetail() {
         hasViewedRef.current = true;
       }
     }
-  }, [isLoading, myApprovals, pendingApprovals, params.id, decodedType, viewedApproval]);
+  }, [
+    isLoading,
+    myApprovals,
+    pendingApprovals,
+    params.id,
+    decodedType,
+    viewedApproval,
+  ]);
 
   useEffect(() => {
     if (approval) {
@@ -100,12 +107,17 @@ export default function ApprovalDetail() {
 
   const handleDeleteComment = async (commentId: string) => {
     try {
-      const res = await fetch(`/api/approvals/${approval.id}/comment/${commentId}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(
+        `/api/approvals/${approval.id}/comment/${commentId}`,
+        {
+          method: 'DELETE',
+        }
+      );
       const data = await res.json();
       if (res.ok) {
-        setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+        setComments((prev) =>
+          prev.filter((comment) => comment.id !== commentId)
+        );
       } else {
         console.error('Error deleting comment:', data.error);
       }
