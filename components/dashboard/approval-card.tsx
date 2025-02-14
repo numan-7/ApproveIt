@@ -94,10 +94,12 @@ function ApprovalDetailsCard({ approval }: ApprovalDetailsCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between sm:flex-row flex-col">
           <div className="flex flex-col space-y-1">
             <div className="flex items-left flex-col">
-              <span className="text-sm text-gray-500">Requested By:</span>
+              <span className="text-sm text-gray-500 text-center sm:text-left">
+                Requested By:
+              </span>
               <span className="font-medium text-gray-800">
                 {approval.requester}
               </span>
@@ -241,7 +243,10 @@ function ApprovalStatusCard({
       <CardContent>
         <div className="space-y-4">
           {approval.approvers.map((approver, index) => (
-            <div key={index} className="flex items-center justify-between">
+            <div
+              key={index}
+              className="flex items-center justify-between flex-col sm:flex-row"
+            >
               <div>
                 <p className="font-semibold">{approver.name}</p>
               </div>
