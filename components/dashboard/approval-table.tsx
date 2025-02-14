@@ -242,7 +242,7 @@ export function ApprovalTable({
         <Table className="w-full mx-auto">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-1/12">
+              <TableHead className="w-[calc(100%/24)]">
                 <input
                   type="checkbox"
                   onChange={toggleSelectAll}
@@ -254,10 +254,12 @@ export function ApprovalTable({
               </TableHead>
               <TableHead className="w-1/6">Name</TableHead>
               <TableHead className="w-1/6">Requester</TableHead>
-              <TableHead className="w-1/6">Approvers</TableHead>
-              <TableHead className="w-1/12">Date</TableHead>
-              <TableHead className="w-1/12">Priority</TableHead>
-              <TableHead className="w-1/12">Status</TableHead>
+              <TableHead className="w-1/6">Description</TableHead>
+              <TableHead className="w-[calc(100%/24)]">Approvers #</TableHead>
+              <TableHead className="w-[calc(100%/24)]">Created</TableHead>
+              <TableHead className="w-1/12">Due By</TableHead>
+              <TableHead className="w-[calc(100%/24)]">Priority</TableHead>
+              <TableHead className="w-[calc(100%/24)]">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -285,16 +287,18 @@ export function ApprovalTable({
                 <TableCell className="truncate max-w-[150px] py-1">
                   {approval.requester}
                 </TableCell>
+                <TableCell className="max-w-[150px] truncate overflow-hidden whitespace-nowrap text-ellipsis py-0">
+                  {approval.description}
+                </TableCell>
+
                 <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.approvers
-                    .map(
-                      (approver) =>
-                        `${approver.name}${approver.didApprove ? ' (Approved)' : ''}`
-                    )
-                    .join(', ')}
+                  {approval.approvers.length}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
-                  {convertToLocalTime(approval.date)}
+                  {convertToLocalTime(approval.date).slice(0, 9)}
+                </TableCell>
+                <TableCell className="truncate max-w-[150px] py-0">
+                  {convertToLocalTime(approval.due_date)}
                 </TableCell>
                 <TableCell className="py-0">
                   <Badge

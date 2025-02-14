@@ -16,11 +16,13 @@ export function SummaryCards({
   pendingApprovalsCount,
 }: SummaryCardsProps) {
   return (
-    <div className="grid gap-8 md:grid-cols-2">
-      <Card>
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card className="rounded-md">
         <CardHeader>
           <CardTitle>My Requests</CardTitle>
-          <CardDescription>Pending approval requests you've sent out</CardDescription>
+          <CardDescription>
+            Pending approval requests you've sent out
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -32,10 +34,12 @@ export function SummaryCards({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-md">
         <CardHeader>
           <CardTitle>Pending My Approval</CardTitle>
-          <CardDescription>Pending approval requests waiting for your approval</CardDescription>
+          <CardDescription>
+            Pending approval requests waiting for your approval
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">

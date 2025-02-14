@@ -16,6 +16,7 @@ import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import { DateTimePicker } from '@/components/date-time-picker';
 import { Badge } from '@/components/ui/badge';
 import { twMerge } from 'tailwind-merge';
+import { convertToLocalTime } from '@/utils/date';
 
 import { UploadButton, UploadDropzone } from '@/utils/uploadthing/uploadthing';
 
@@ -53,6 +54,7 @@ export function ApprovalForm() {
         setName(approvalToEdit.name);
         setDescription(approvalToEdit.description);
         setApprovers(approvalToEdit.approvers);
+        setDueDate(new Date(convertToLocalTime(approvalToEdit.due_date)));
         setPriority(approvalToEdit.priority);
         setAttachments(approvalToEdit.attachments);
       }
@@ -106,7 +108,6 @@ export function ApprovalForm() {
       return {
         key: file.key,
         name: file.name,
-        type: file.type,
         size: sizeStr,
         url: file.url,
       };
@@ -171,16 +172,27 @@ export function ApprovalForm() {
       return;
     }
 
+    if (!dueDate) {
+      setError('Please select a due date.');
+      return;
+    }
+
     if (isFileUploading || deletingFileKey) {
       setError('Please wait until file uploads/deletions are complete.');
       return;
     }
 
+    const utcDueDate = new Date(dueDate)
+      .toISOString()
+      .replace('T', ' ')
+      .replace('Z', '+00');
     setIsSubmitting(true);
+
     const payload: Partial<Approval> = {
       name,
       description,
       requester: user?.email ?? 'unknown',
+      due_date: utcDueDate,
       approvers,
       status: 'pending',
       priority,
@@ -257,8 +269,10 @@ export function ApprovalForm() {
   }, []);
 
   const RedAsterisk = () => (
-    <span className="text-red-600" aria-hidden="true">&nbsp;*</span>
-  )
+    <span className="text-red-600" aria-hidden="true">
+      &nbsp;*
+    </span>
+  );
 
   return (
     <>
@@ -269,9 +283,9 @@ export function ApprovalForm() {
           {error && <p className="text-red-600">{error}</p>}
           <div className="space-y-2">
             <Label htmlFor="name">
-                Request Name 
-                <RedAsterisk /> 
-              </Label>
+              Request Name
+              <RedAsterisk />
+            </Label>
             <Input
               id="name"
               placeholder="Enter approval name"
@@ -282,7 +296,9 @@ export function ApprovalForm() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description<RedAsterisk />   
+            <Label htmlFor="description">
+              Description
+              <RedAsterisk />
             </Label>
             <Textarea
               id="description"
@@ -295,9 +311,9 @@ export function ApprovalForm() {
           </div>
           <div className="space-y-2">
             <Label>
-                Approver(s)
-                <RedAsterisk />   
-              </Label>
+              Approver(s)
+              <RedAsterisk />
+            </Label>
             <div className="flex space-x-2">
               <Input
                 type="email"
@@ -335,11 +351,14 @@ export function ApprovalForm() {
               ))}
             </div>
           </div>
-          <div >
+          <div>
             <DateTimePicker date={dueDate} setDate={setDueDate} />
           </div>
           <div className="space-y-2">
-            <Label>Priority<RedAsterisk /></Label>
+            <Label>
+              Priority
+              <RedAsterisk />
+            </Label>
             <RadioGroup
               value={priority}
               onValueChange={(value: string) =>

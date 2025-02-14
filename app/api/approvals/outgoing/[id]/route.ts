@@ -99,7 +99,6 @@ export async function PATCH(
         toInsert.map((att) => ({
           approval_id: id,
           name: att.name,
-          type: att.type,
           size: att.size,
           url: att.url,
           key: att.key,
@@ -124,9 +123,10 @@ export async function PATCH(
         date,
         description,
         status,
+        due_date,
         priority,
         approvers,
-        attachments: attachments ( id, name, type, size, url, key )
+        attachments: attachments ( id, name, size, url, key )
         comments: comments ( id, name, user_email, comment, created_at ),
       `
     )

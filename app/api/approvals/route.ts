@@ -30,6 +30,7 @@ export async function GET(req: Request) {
       description,
       status,
       priority,
+      due_date,
       approvers,
       comments: comments ( id, name, user_email, comment, created_at ),
       attachments: attachments ( name, size, url, key ),
@@ -42,6 +43,7 @@ export async function GET(req: Request) {
 
   const incomingApprovalslength = incoming.length || 0;
   const outgoingApprovalslength = outgoing?.length || 0;
+
   let allEvents: {
     id: string;
     type: string;
@@ -61,30 +63,33 @@ export async function GET(req: Request) {
             name: event.name,
             date: event.date,
             approvalName: approval.name,
-            approvalID: event.approval_id
+            approvalID: event.approval_id,
           });
         });
       }
     });
   }
 
-  allEvents.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  // get events within the last 7 days
+  allEvents = allEvents.filter(
+    (event) =>
+      new Date(event.date).getTime() >=
+      new Date(new Date().setDate(new Date().getDate() - 7)).getTime()
   );
 
-  const recent10Events = allEvents.slice(0, 10);
-
   if (incomingError) {
-    console.log("Incoming error", incomingError);
     return NextResponse.json({ error: incomingError.message }, { status: 500 });
   } else if (outgoingError) {
     return NextResponse.json({ error: outgoingError.message }, { status: 500 });
   }
 
+  const approvals = incoming.concat(outgoing);
+
   const data = {
-    incoming: incomingApprovalslength,
-    outgoing: outgoingApprovalslength,
-    recentEvents: recent10Events,
+    approvals: approvals,
+    incomingLength: incomingApprovalslength,
+    outgoingLength: outgoingApprovalslength,
+    recentEvents: allEvents,
   };
 
   return NextResponse.json(data);

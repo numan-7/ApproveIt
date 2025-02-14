@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Eye, CheckCircle, XCircle } from 'lucide-react';
@@ -19,7 +19,6 @@ interface ApprovalEventsProps {
 }
 
 export function ApprovalDashboardTimeline({ events }: ApprovalEventsProps) {
-
   const router = useRouter();
 
   const getEventIcon = (type: string) => {
@@ -63,12 +62,19 @@ export function ApprovalDashboardTimeline({ events }: ApprovalEventsProps) {
               {getEventIcon(event.type)}
             </div>
             <div className="ml-12">
-              <p 
+              <p
                 className="font-medium cursor-pointer hover:underline"
-                onClick={() => {router.push(`dashboard/approval/${event.approvalID}?type=${btoa('outgoing' + ' ' + event.name)}`)}}
-              >{event.approvalName}</p>
+                onClick={() => {
+                  router.push(
+                    `dashboard/approval/${event.approvalID}?type=${btoa('outgoing' + ' ' + event.name)}`
+                  );
+                }}
+              >
+                {event.approvalName}
+              </p>
               <p className="text-sm text-gray-600">
-                {event.type.charAt(0).toUpperCase() + event.type.slice(1)} by {event.name}
+                {event.type.charAt(0).toUpperCase() + event.type.slice(1)} by{' '}
+                {event.name}
               </p>
               <p className="text-xs text-gray-500">
                 {new Date(event.date).toLocaleString()}

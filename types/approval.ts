@@ -1,7 +1,6 @@
 export interface Attachment {
   key: string;
   name: string;
-  type: string;
   size: string;
   url: string;
 }
@@ -32,12 +31,12 @@ export interface Approval {
   name: string;
   requester: string;
   approvers: Approvers[];
-  date: string;
+  due_date: string;
+  date: Date;
   description: string;
   status: 'pending' | 'approved' | 'rejected';
   priority: 'high' | 'medium' | 'low';
   comments: Comment[];
   events: Events[];
   attachments: Attachment[];
-  expanded?: boolean;
 }

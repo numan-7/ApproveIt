@@ -24,6 +24,7 @@ export async function GET(req: Request) {
       date,
       description,
       status,
+      due_date,
       priority,
       approvers,
       comments: comments ( id, name, user_email, comment, created_at ),
@@ -51,7 +52,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
   const body = await req.json();
-  const { name, description, priority, approvers, attachments } = body;
+  const { name, description, due_date, priority, approvers, attachments } =
+    body;
 
   if (attachments) {
     if (!Array.isArray(attachments))
@@ -84,6 +86,7 @@ export async function POST(req: Request) {
         requester: user.email,
         description,
         priority,
+        due_date,
         status: 'pending',
         approvers: approvers || [],
       },
@@ -100,7 +103,6 @@ export async function POST(req: Request) {
       attachments.map((att: any) => ({
         approval_id: approvalId,
         name: att.name,
-        type: att.type,
         size: att.size,
         url: att.url,
         key: att.key,

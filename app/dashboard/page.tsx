@@ -2,17 +2,26 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { PlusCircle, ClipboardList, CheckSquare, Clock } from 'lucide-react';
 import { SummaryCards } from '@/components/dashboard/summary-cards';
 import { useEffect, useState } from 'react';
 import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import { ApprovalDashboardTimeline } from '@/components/dashboard/approval-dashboard-timeline';
+import { UpcomingApprovalsCalendar } from '@/components/dashboard/upcoming-approvals-calendar';
+import { Approval } from '@/types/approval';
 
 export default function Dashboard() {
   interface ApprovalNumbers {
-    incoming: number;
-    outgoing: number;
+    approvals: Approval[];
+    incomingLength: number;
+    outgoingLength: number;
     recentEvents: {
       id: string;
       type: string;
@@ -25,8 +34,9 @@ export default function Dashboard() {
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [approvalStats, setApprovalStats] = useState<ApprovalNumbers>({
-    incoming: 0,
-    outgoing: 0,
+    approvals: [],
+    incomingLength: 0,
+    outgoingLength: 0,
     recentEvents: [],
   });
 
@@ -50,110 +60,44 @@ export default function Dashboard() {
 
   if (isLoading) return <SpinnerLoader />;
 
-  const mockRecentEvents = [
-    {
-      id: 1,
-      type: 'viewed',
-      user: 'alice@example.com',
-      date: '2025-02-11T20:30:00.000Z',
-      approvalName: 'Budget Approval',
-    },
-    {
-      id: 2,
-      type: 'approved',
-      user: 'bob@example.com',
-      date: '2025-02-11T21:00:00.000Z',
-      approvalName: 'Project X Kickoff',
-    },
-    {
-      id: 3,
-      type: 'rejected',
-      user: 'charlie@example.com',
-      date: '2025-02-11T21:15:00.000Z',
-      approvalName: 'New Hire Request',
-    },
-    {
-      id: 4,
-      type: 'viewed',
-      user: 'david@example.com',
-      date: '2025-02-11T22:00:00.000Z',
-      approvalName: 'Marketing Campaign',
-    },
-    {
-      id: 5,
-      type: 'approved',
-      user: 'eve@example.com',
-      date: '2025-02-12T09:00:00.000Z',
-      approvalName: 'Software License Renewal',
-    },
-    {
-      id: 6,
-      type: 'approved',
-      user: 'eve@example.com',
-      date: '2025-02-12T09:00:00.000Z',
-      approvalName: 'Software License Renewal',
-    },
-    {
-      id: 7,
-      type: 'approved',
-      user: 'eve@example.com',
-      date: '2025-02-12T09:00:00.000Z',
-      approvalName: 'Software License Renewal',
-    },
-    {
-      id: 8,
-      type: 'approved',
-      user: 'eve@example.com',
-      date: '2025-02-12T09:00:00.000Z',
-      approvalName: 'Software License Renewal',
-    },
-    {
-      id: 9,
-      type: 'approved',
-      user: 'eve@example.com',
-      date: '2025-02-12T09:00:00.000Z',
-      approvalName: 'Software License Renewal',
-    },
-  ];
-
   return (
     <div className="p-4 space-y-3 min-h-screen md:flex md:flex-col">
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
       <SummaryCards
-        myRequestsCount={approvalStats.outgoing}
-        pendingApprovalsCount={approvalStats.incoming}
+        myRequestsCount={approvalStats.outgoingLength}
+        pendingApprovalsCount={approvalStats.incomingLength}
       />
 
       <div className="grid md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="rounded-md flex flex-col justify-between">
           <CardHeader>
             <CardTitle className="flex items-center">
               <PlusCircle className="mr-2 h-5 w-5 text-blue-500" />
               New Request
             </CardTitle>
+            <CardDescription>
+              Submit a new approval request for review.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-sm text-gray-600">
-              Submit a new approval request for review.
-            </p>
             <Link href="/dashboard/approvals/create">
               <Button className="w-full">Create Approval</Button>
             </Link>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-md flex flex-col justify-between">
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center p-">
               <ClipboardList className="mr-2 h-5 w-5 text-green-500" />
               Outgoing Approvals
             </CardTitle>
+            <CardDescription>
+              View and manage your outgoing approvals.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-sm text-gray-600">
-              View and manage your outgoing approvals.
-            </p>
             <Link href="/dashboard/approvals/outgoing">
               <Button variant="outline" className="w-full">
                 View Approvals
@@ -162,17 +106,17 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-md flex flex-col justify-between">
           <CardHeader>
             <CardTitle className="flex items-center">
               <CheckSquare className="mr-2 h-5 w-5 text-yellow-500" />
               Incoming Approvals
             </CardTitle>
+            <CardDescription>
+              Review and act on pending incoming approvals.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-sm text-gray-600">
-              Review and act on pending incoming approvals.
-            </p>
             <Link href="/dashboard/approvals/incoming">
               <Button variant="outline" className="w-full">
                 Review Incoming
@@ -181,17 +125,27 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      <Card className="flex flex-col md:flex-1">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Clock className="mr-2 h-5 w-5 text-purple-500" />
-            Recent Approval Events
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="overflow-hidden">
-          <ApprovalDashboardTimeline events={approvalStats.recentEvents} />
-        </CardContent>
-      </Card>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <Card className="rounded-md">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Clock className="mr-2 h-5 w-5 text-purple-500" />
+                <div className="relative">
+                  <span>Approval Activity - Last 7 Days</span>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ApprovalDashboardTimeline events={approvalStats.recentEvents} />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-2">
+          <UpcomingApprovalsCalendar approvals={approvalStats.approvals} />
+        </div>
+      </div>
     </div>
   );
 }
