@@ -16,7 +16,7 @@ export function SummaryCards({
   pendingApprovalsCount,
 }: SummaryCardsProps) {
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid gap-3 md:grid-cols-2">
       <Card className="rounded-md">
         <CardHeader>
           <CardTitle>My Requests</CardTitle>

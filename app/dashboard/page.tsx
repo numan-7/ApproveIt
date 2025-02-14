@@ -69,7 +69,7 @@ export default function Dashboard() {
         pendingApprovalsCount={approvalStats.incomingLength}
       />
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-3 gap-3">
         <Card className="rounded-md flex flex-col justify-between">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -126,7 +126,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid lg:grid-cols-3 gap-3">
         <div className="lg:col-span-1">
           <Card className="rounded-md">
             <CardHeader>
