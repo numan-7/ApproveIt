@@ -1,8 +1,8 @@
-"use server";
+'use server';
 
-import { createClientForServer } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
-import type { Provider } from "@supabase/supabase-js";
+import { createClientForServer } from '@/utils/supabase/server';
+import { redirect } from 'next/navigation';
+import type { Provider } from '@supabase/supabase-js';
 
 const signInWith = (provider: Provider) => async (): Promise<void> => {
   const supabase = await createClientForServer();
@@ -23,10 +23,20 @@ const signInWith = (provider: Provider) => async (): Promise<void> => {
   if (data?.url) {
     redirect(data.url);
   } else {
-    console.error("Error: data.url is null");
+    console.error('Error: data.url is null');
   }
 };
 
-const signInWithGoogle = signInWith("google");
+const signInWithGoogle = signInWith('google');
 
-export { signInWithGoogle };
+const signInWithZoom = signInWith('zoom');
+
+const signOutWithZoom = async (): Promise<void> => {
+  const supabase = await createClientForServer();
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error('Error signing out from Zoom:', error.message);
+  }
+};
+
+export { signInWithGoogle, signInWithZoom, signOutWithZoom };

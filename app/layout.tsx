@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Playfair_Display, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { ZoomProvider } from '@/context/ZoomContext';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -24,13 +25,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" className={`${playfair.variable} ${dm_sans.variable}`}>
       <body className={`${playfair.className} antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <ZoomProvider>{children}</ZoomProvider>
+        </AuthProvider>
       </body>
     </html>
   );

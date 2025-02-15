@@ -1,3 +1,10 @@
+export interface ZoomMeeting {
+  join_url: string;
+  meeting_id: string;
+  start_time: string;
+  duration: number;
+}
+
 export interface Attachment {
   key: string;
   name: string;
@@ -29,6 +36,15 @@ export interface Events {
 }
 
 export interface Approval {
+  meeting_id(
+    meeting_id: any,
+    arg1: {
+      topic: string;
+      meetingStartTime: string;
+      duration: number;
+      invitees: string[];
+    }
+  ): any;
   id: number;
   name: string;
   requester: string;
@@ -41,4 +57,5 @@ export interface Approval {
   comments: Comment[];
   events: Events[];
   attachments: Attachment[];
+  zoom_meeting: ZoomMeeting;
 }

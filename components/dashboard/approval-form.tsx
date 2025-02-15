@@ -17,8 +17,9 @@ import { DateTimePicker } from '@/components/date-time-picker';
 import { Badge } from '@/components/ui/badge';
 import { twMerge } from 'tailwind-merge';
 import { convertToLocalTime } from '@/utils/date';
-
-import { UploadButton, UploadDropzone } from '@/utils/uploadthing/uploadthing';
+import { UploadDropzone } from '@/utils/uploadthing/uploadthing';
+import { useZoomMeeting } from '@/hooks/useZoomMeeting';
+import { join } from 'path';
 
 type Approver = {
   email: string;
@@ -45,6 +46,21 @@ export function ApprovalForm() {
   const [isFileUploading, setIsFileUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [includeZoom, setIncludeZoom] = useState(false);
+  const [zoomStartTime, setZoomStartTime] = useState<Date | undefined>(
+    undefined
+  );
+  const [zoomDuration, setZoomDuration] = useState<number>(30);
+  const [approvalZoomMeeting, setApprovalZoomMeeting] = useState<{
+    join_url: string;
+    meeting_id: string;
+    start_time: string;
+    duration: number;
+  } | null>(null);
+  const [isZoomConnected, setIsZoomConnected] = useState(false);
+  const [loadingZoom, setLoadingZoom] = useState(false);
+  const { createMeeting, updateMeeting, deleteMeeting } = useZoomMeeting();
+
   useEffect(() => {
     if (editId) {
       const approvalToEdit = approvals.find(
@@ -57,6 +73,13 @@ export function ApprovalForm() {
         setDueDate(new Date(convertToLocalTime(approvalToEdit.due_date)));
         setPriority(approvalToEdit.priority);
         setAttachments(approvalToEdit.attachments);
+        if (
+          approvalToEdit.zoom_meeting &&
+          approvalToEdit.zoom_meeting.start_time
+        ) {
+          setIncludeZoom(true);
+          setZoomStartTime(new Date(approvalToEdit.zoom_meeting.start_time));
+        }
       }
     }
   }, [editId, approvals]);
@@ -81,22 +104,29 @@ export function ApprovalForm() {
 
   useEffect(() => {
     if (!editId && typeof window !== 'undefined') {
-      const draft = {
-        name,
-        description,
-        approvers,
-        priority,
-        attachments,
-      };
+      const draft = { name, description, approvers, priority, attachments };
       localStorage.setItem('approvalFormDraft', JSON.stringify(draft));
     }
   }, [name, description, approvers, priority, attachments, editId]);
+
+  useEffect(() => {
+    const checkZoomConnected = async () => {
+      try {
+        const res = await fetch('/api/zoom/is-connected');
+        const data = await res.json();
+        setIsZoomConnected(data.connected);
+      } catch (err) {
+        console.error('Error checking Zoom connection:', err);
+        setIsZoomConnected(false);
+      }
+    };
+    checkZoomConnected();
+  }, []);
 
   const isLoading = authLoading || loading;
 
   const handleUploadComplete = (files: FileUpload[]) => {
     setIsFileUploading(false);
-
     const newAttachments: Attachment[] = files.map((file) => {
       let sizeStr;
       if (file.size >= 1024 * 1024) {
@@ -104,16 +134,9 @@ export function ApprovalForm() {
       } else {
         sizeStr = `${(file.size / 1024).toFixed(1)} KB`;
       }
-
-      return {
-        key: file.key,
-        name: file.name,
-        size: sizeStr,
-        url: file.url,
-      };
+      return { key: file.key, name: file.name, size: sizeStr, url: file.url };
     });
     setAttachments((prev) => [...prev, ...newAttachments]);
-
     const existingKeys = JSON.parse(
       localStorage.getItem('unsubmittedFiles') || '[]'
     );
@@ -126,7 +149,6 @@ export function ApprovalForm() {
 
   const handleDeleteAttachment = async (attachmentKey: string) => {
     setDeletingFileKey(attachmentKey);
-
     try {
       if (!editId) {
         const res = await fetch('/api/uploadthing', {
@@ -141,10 +163,7 @@ export function ApprovalForm() {
           return;
         }
       }
-      setAttachments((prevAttachments) =>
-        prevAttachments.filter((att) => att.key !== attachmentKey)
-      );
-
+      setAttachments((prev) => prev.filter((att) => att.key !== attachmentKey));
       const existingKeys = JSON.parse(
         localStorage.getItem('unsubmittedFiles') || '[]'
       );
@@ -163,6 +182,7 @@ export function ApprovalForm() {
     e.preventDefault();
     setError('');
 
+    // Validate approvers
     if (approvers.length === 0) {
       setError('Please add at least one approver.');
       return;
@@ -171,23 +191,106 @@ export function ApprovalForm() {
       setError('You cannot add yourself as an approver.');
       return;
     }
-
+    // Validate due date
     if (!dueDate) {
       setError('Please select a due date.');
       return;
     }
-
+    // Ensure no file operations are in progress
     if (isFileUploading || deletingFileKey) {
       setError('Please wait until file uploads/deletions are complete.');
       return;
     }
 
+    let zoomMeeting = null;
+    let didDeleteMeeting = null;
+
+    // Handle Zoom meeting creation/updating/deletion
+    if (includeZoom) {
+      if (!isZoomConnected) {
+        setError(
+          'Please connect your Zoom account in settings before including a meeting.'
+        );
+        return;
+      }
+      if (!zoomStartTime) {
+        setError('Please select a Zoom meeting start time.');
+        return;
+      }
+      setLoadingZoom(true);
+
+      if (editId) {
+        // Edit mode: Find the approval we're editing
+        const approvalToEdit = approvals.find(
+          (a) => a.id.toString() === editId.toString()
+        );
+        if (!approvalToEdit) {
+          setError('Approval not found.');
+          setLoadingZoom(false);
+          return;
+        }
+        if (approvalToEdit.zoom_meeting) {
+          // Update the existing meeting
+          zoomMeeting = await updateMeeting(
+            approvalToEdit.zoom_meeting.meeting_id,
+            {
+              topic: name,
+              meetingStartTime: zoomStartTime.toISOString(),
+              duration: zoomDuration,
+              invitees: approvers.map((a) => a.email),
+            }
+          );
+          // Preserve the original join_url
+          zoomMeeting = {
+            ...zoomMeeting,
+            join_url: approvalToEdit.zoom_meeting.join_url,
+          };
+        } else {
+          // Create a new meeting since none exists
+          zoomMeeting = await createMeeting({
+            topic: name,
+            meetingStartTime: zoomStartTime.toISOString(),
+            duration: zoomDuration,
+            invitees: approvers.map((a) => a.email),
+          });
+        }
+      } else {
+        // Create mode: Create a new meeting
+        zoomMeeting = await createMeeting({
+          topic: name,
+          meetingStartTime: zoomStartTime.toISOString(),
+          duration: zoomDuration,
+          invitees: approvers.map((a) => a.email),
+        });
+      }
+
+      if (!zoomMeeting) {
+        setLoadingZoom(false);
+        return;
+      }
+      setLoadingZoom(false);
+    } else if (editId) {
+      // In edit mode and user has unchecked includeZoom,
+      // delete the existing meeting if any
+      const approvalToEdit = approvals.find(
+        (a) => a.id.toString() === editId.toString()
+      );
+      if (approvalToEdit?.zoom_meeting) {
+        didDeleteMeeting = await deleteMeeting(
+          approvalToEdit.zoom_meeting.meeting_id
+        );
+      }
+    }
+
+    // Convert due date to UTC formatted string
     const utcDueDate = new Date(dueDate)
       .toISOString()
       .replace('T', ' ')
       .replace('Z', '+00');
+
     setIsSubmitting(true);
 
+    // Build the payload for approval
     const payload: Partial<Approval> = {
       name,
       description,
@@ -200,6 +303,27 @@ export function ApprovalForm() {
       attachments,
     };
 
+    // Attach Zoom meeting data based on current state
+    if (includeZoom) {
+      // In creation/updating mode, add the meeting data
+      // @ts-ignore
+      payload.zoom_meeting = zoomMeeting;
+    } else {
+      // In edit mode with Zoom disabled, verify deletion if a meeting previously existed
+      if (editId) {
+        const approvalToEdit = approvals.find(
+          (a) => a.id.toString() === editId.toString()
+        );
+        if (approvalToEdit?.zoom_meeting && !didDeleteMeeting) {
+          setError('Failed to delete Zoom meeting');
+          return;
+        }
+      }
+      // Set an empty meeting
+      // @ts-ignore
+      payload.zoom_meeting = {};
+    }
+
     try {
       if (editId) {
         await updateApproval(editId, payload);
@@ -210,7 +334,6 @@ export function ApprovalForm() {
         }
       }
       localStorage.removeItem('unsubmittedFiles');
-
       router.push('/dashboard');
     } catch (err: any) {
       setError(err.message);
@@ -268,6 +391,8 @@ export function ApprovalForm() {
     };
   }, []);
 
+  const formGroupClass = 'mb-4';
+
   const RedAsterisk = () => (
     <span className="text-red-600" aria-hidden="true">
       &nbsp;*
@@ -279,10 +404,12 @@ export function ApprovalForm() {
       {isLoading ? (
         <SpinnerLoader />
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {error && <p className="text-red-600">{error}</p>}
-          <div className="space-y-2">
-            <Label htmlFor="name">
+
+          {/* Request Name */}
+          <div className={formGroupClass}>
+            <Label htmlFor="name" className="block mb-1">
               Request Name
               <RedAsterisk />
             </Label>
@@ -295,8 +422,10 @@ export function ApprovalForm() {
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">
+
+          {/* Description */}
+          <div className={formGroupClass}>
+            <Label htmlFor="description" className="block mb-1">
               Description
               <RedAsterisk />
             </Label>
@@ -309,12 +438,14 @@ export function ApprovalForm() {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
-          <div className="space-y-2">
-            <Label>
+
+          {/* Approvers */}
+          <div className={formGroupClass}>
+            <Label className="block mb-1">
               Approver(s)
               <RedAsterisk />
             </Label>
-            <div className="flex space-x-2">
+            <div className="flex space-x-2 mb-2">
               <Input
                 type="email"
                 placeholder="Enter approver email"
@@ -328,7 +459,7 @@ export function ApprovalForm() {
                 <PlusCircle className="mr-2 h-4 w-4" /> Add
               </Button>
             </div>
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               {approvers.map((approver) => (
                 <Badge
                   key={approver.email}
@@ -351,11 +482,15 @@ export function ApprovalForm() {
               ))}
             </div>
           </div>
-          <div>
+
+          {/* Due Date */}
+          <div className={formGroupClass}>
             <DateTimePicker date={dueDate} setDate={setDueDate} />
           </div>
-          <div className="space-y-2">
-            <Label>
+
+          {/* Priority */}
+          <div className={formGroupClass}>
+            <Label className="block mb-1">
               Priority
               <RedAsterisk />
             </Label>
@@ -381,63 +516,94 @@ export function ApprovalForm() {
               </div>
             </RadioGroup>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="attachments">Attachments</Label>
-            <div className="flex flex-col gap-2">
-              <UploadDropzone
-                endpoint="imageUploader"
-                onBeforeUploadBegin={(files: File[]) => {
-                  setIsFileUploading(true);
-                  return files;
-                }}
-                // @ts-ignore
-                onClientUploadComplete={(files: FileUpload[]) => {
-                  handleUploadComplete(files);
-                  setIsFileUploading(false);
-                }}
-                onUploadError={(error: Error) => {
-                  setError(`Upload error: ${error.message}`);
-                  setIsFileUploading(false);
-                }}
-                config={{ cn: twMerge }}
-                className="flex items-center justify-center ut-button:font-dm ut-button:h-9 ut-button:text-sm ut-button:bg-black hover:ut-button:bg-primary/90"
-                disabled={isFileUploading || isSubmitting || !!deletingFileKey}
-              />
-              {attachments.length > 0 && (
-                <ul className="list-disc pl-5 text-sm">
-                  {attachments.map((file, i) => (
-                    <li key={i} className="flex items-center gap-2">
-                      {deletingFileKey === file.key ? (
-                        <Loader2 className="animate-spin h-4 w-4 text-red-700" />
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="p-0 text-red-700 hover:text-red-700"
-                          onClick={() => handleDeleteAttachment(file.key)}
-                          disabled={
-                            isFileUploading || isSubmitting || !!deletingFileKey
-                          }
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                      <span>{file.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+
+          {/* Attachments */}
+          <div className={formGroupClass}>
+            <Label htmlFor="attachments" className="block mb-1">
+              Attachments
+            </Label>
+            <UploadDropzone
+              endpoint="imageUploader"
+              onBeforeUploadBegin={(files: File[]) => {
+                setIsFileUploading(true);
+                return files;
+              }}
+              // @ts-ignore
+              onClientUploadComplete={(files: FileUpload[]) => {
+                handleUploadComplete(files);
+                setIsFileUploading(false);
+              }}
+              onUploadError={(error: Error) => {
+                setError(`Upload error: ${error.message}`);
+                setIsFileUploading(false);
+              }}
+              config={{ cn: twMerge }}
+              className="flex items-center justify-center ut-button:font-dm ut-button:h-9 ut-button:text-sm ut-button:bg-black hover:ut-button:bg-primary/90"
+              disabled={isFileUploading || isSubmitting || !!deletingFileKey}
+            />
+            {attachments.length > 0 && (
+              <ul className="list-disc pl-5 mt-2 text-sm">
+                {attachments.map((file, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    {deletingFileKey === file.key ? (
+                      <Loader2 className="animate-spin h-4 w-4 text-red-700" />
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="p-0 text-red-700 hover:text-red-700"
+                        onClick={() => handleDeleteAttachment(file.key)}
+                        disabled={
+                          isFileUploading || isSubmitting || !!deletingFileKey
+                        }
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <span>{file.name}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
+
+          {/* Zoom Meeting Section */}
+          <div className={formGroupClass}>
+            <Label className="block mb-1">Zoom Meeting</Label>
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="checkbox"
+                checked={includeZoom}
+                onChange={(e) => {
+                  setIncludeZoom(e.target.checked);
+                  if (!e.target.checked) {
+                    setZoomStartTime(undefined);
+                  }
+                }}
+              />
+              <span className="text-sm">
+                Create a 30m Zoom meeting for this Approval?
+              </span>
+            </div>
+            {includeZoom && (
+              <div className="space-y-2">
+                <DateTimePicker
+                  isZoom={true}
+                  date={zoomStartTime}
+                  setDate={setZoomStartTime}
+                />
+              </div>
+            )}
+          </div>
+
           <Button
             type="submit"
             className="w-full flex items-center justify-center"
             disabled={isSubmitting || isFileUploading || !!deletingFileKey}
           >
-            {isSubmitting ||
-              (isFileUploading && (
-                <Loader2 className="animate-spin h-4 w-4 mr-2" />
-              ))}
+            {(isSubmitting || isFileUploading || loadingZoom) && (
+              <Loader2 className="animate-spin h-4 w-4 mr-2" />
+            )}
             {editId ? 'Update Approval Request' : 'Create Approval Request'}
           </Button>
         </form>

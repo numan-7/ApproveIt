@@ -27,6 +27,7 @@ export async function GET(req: Request) {
       due_date,
       priority,
       approvers,
+      zoom_meeting,
       comments: comments ( id, name, user_email, comment, created_at ),
       attachments: attachments ( name, size, url, key ),
       events: events ( id, date, type, name, approval_id)
@@ -52,8 +53,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 403 });
 
   const body = await req.json();
-  const { name, description, due_date, priority, approvers, attachments } =
-    body;
+  const {
+    name,
+    description,
+    due_date,
+    priority,
+    approvers,
+    attachments,
+    zoom_meeting,
+  } = body;
 
   if (attachments) {
     if (!Array.isArray(attachments))
@@ -89,6 +97,7 @@ export async function POST(req: Request) {
         due_date,
         status: 'pending',
         approvers: approvers || [],
+        zoom_meeting: zoom_meeting || [],
       },
     ])
     .select();

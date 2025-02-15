@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 
 export function RetractableSidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -26,6 +27,8 @@ export function RetractableSidebar() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const pathname = usePathname();
   const { user, loading, signOut } = useAuth();
+
+  const router = useRouter();
 
   const sidebarRef = useRef<HTMLDivElement>(null);
 
@@ -88,7 +91,7 @@ export function RetractableSidebar() {
     <div
       ref={sidebarRef}
       className={cn(
-        'fixed font-dm top-0 font-bold left-0 h-screen flex flex-col z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50',
+        'fixed font-dm top-0 left-0 h-screen flex flex-col z-20 text-card-foreground transition-all duration-300 ease-in-out shadow-xl shadow-emerald-950/50',
         isExpanded ? 'w-64' : 'w-16'
       )}
       style={{
@@ -142,7 +145,7 @@ export function RetractableSidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    'flex items-center p-2 rounded-md text-sm font-bold tracking-wider text-white uppercase transition-colors hover:bg-forest/10',
+                    'flex items-center p-2 rounded-md text-sm tracking-wider text-white uppercase transition-colors hover:bg-forest/10',
                     pathname === item.href && 'bg-forest/20 text-white',
                     !isExpanded && 'justify-center'
                   )}
@@ -155,7 +158,7 @@ export function RetractableSidebar() {
                   <button
                     onClick={handleApprovalsClick}
                     className={cn(
-                      'flex items-center w-full p-2 rounded-md text-sm font-bold tracking-wider text-white uppercase transition-colors hover:bg-forest/10',
+                      'flex items-center w-full p-2 rounded-md text-sm tracking-wider text-white uppercase transition-colors hover:bg-forest/10',
                       !isExpanded && 'justify-center'
                     )}
                   >
@@ -231,12 +234,13 @@ export function RetractableSidebar() {
             />
             {isExpanded && (
               <>
-                <span className="text-sm truncate">{user?.email}</span>
+                <span className="text-sm truncate font-normal">
+                  {user?.email}
+                </span>
                 <ChevronsUpDown className="h-5 w-5 ml-auto" />
               </>
             )}
           </button>
-
           {/* Floating Sign Out Menu */}
           {isUserMenuOpen && (
             <motion.div
@@ -250,25 +254,63 @@ export function RetractableSidebar() {
                   : 'bottom-[5px] left-[70px] w-64'
               )}
             >
-              <Button
-                onClick={() => {
-                  setIsSigningOut(true);
-                  signOut();
-                }}
-                disabled={isSigningOut}
-                variant="ghost"
-                className={cn(
-                  'flex items-center w-full p-2 text-white font-dm uppercase tracking-wider hover:bg-black/40 hover:text-white rounded-md transition',
-                  isSigningOut ? 'cursor-not-allowed' : 'cursor-pointer'
-                )}
-              >
-                {isSigningOut ? (
-                  <Loader2 className="animate-spin text-white" size={20} />
-                ) : (
-                  <LogOut className="h-5 w-5 mr-2" />
-                )}
-                <span>Sign Out</span>
-              </Button>
+              <ul className="flex flex-col">
+                <li>
+                  <Button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      router.push('/dashboard/settings');
+                    }}
+                    variant="ghost"
+                    className="flex items-center w-full p-2 text-white hover:bg-black/40 rounded-md transition"
+                  >
+                    <svg
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M11 17a4 4 0 100-8 4 4 0 000 8zm-7-4a7 7 0 1114 0 7 7 0 01-14 0z"
+                      />
+                    </svg>
+                    Settings
+                  </Button>
+                </li>
+                <li>
+                  <Button
+                    onClick={() => {
+                      setIsSigningOut(true);
+                      signOut();
+                    }}
+                    disabled={isSigningOut}
+                    variant="ghost"
+                    className="flex items-center w-full p-2 text-white hover:bg-black/40 rounded-md transition"
+                  >
+                    {isSigningOut ? (
+                      <Loader2 className="animate-spin text-white" size={20} />
+                    ) : (
+                      <svg
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M17 16l4-4m0 0l-4-4m4 4H7"
+                        />
+                      </svg>
+                    )}
+                    Sign Out
+                  </Button>
+                </li>
+              </ul>
             </motion.div>
           )}
         </div>
