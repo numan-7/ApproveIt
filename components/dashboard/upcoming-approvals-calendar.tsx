@@ -31,8 +31,6 @@ export function UpcomingApprovalsCalendar({
 
   const router = useRouter();
 
-  console.log(approvals);
-
   const daysInMonth = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth() + 1,
