@@ -1,4 +1,3 @@
-// app/api/zoom/callback/route.ts
 import { NextResponse } from 'next/server';
 import { createClientForServer } from '@/utils/supabase/server';
 
@@ -58,5 +57,7 @@ export async function GET(request: Request) {
   if (upsertError) {
     return NextResponse.json({ error: upsertError.message }, { status: 500 });
   }
-  return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`);
+  return NextResponse.redirect(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/settings`
+  );
 }

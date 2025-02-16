@@ -7,6 +7,7 @@ interface ZoomContextType {
   connect: () => void;
   disconnect: () => Promise<void>;
   refreshConnection: () => Promise<void>;
+  refreshZoomToken: () => Promise<void>;
 }
 
 const ZoomContext = createContext<ZoomContextType | undefined>(undefined);
@@ -25,6 +26,37 @@ export const ZoomProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const refreshZoomToken = async () => {
+    try {
+      const res = await fetch('/api/zoom/refresh', { method: 'POST' });
+      const data = await res.json();
+      if (data.error) {
+        console.error('Error refreshing Zoom token:', data.error);
+      } else {
+        console.log('Zoom token refreshed:', data.refreshed);
+      }
+    } catch (error) {
+      console.error('Error refreshing Zoom token:', error);
+    }
+  };
+
+  // check every 5 minutes if token is valid
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    if (isConnected) {
+      refreshZoomToken();
+      intervalId = setInterval(
+        () => {
+          refreshZoomToken();
+        },
+        5 * 60 * 1000
+      );
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isConnected]);
+
   useEffect(() => {
     refreshConnection();
   }, []);
@@ -35,9 +67,7 @@ export const ZoomProvider = ({ children }: { children: React.ReactNode }) => {
 
   const disconnect = async () => {
     try {
-      const res = await fetch('/api/zoom/disconnect', {
-        method: 'POST',
-      });
+      const res = await fetch('/api/zoom/disconnect', { method: 'POST' });
       if (res.ok) {
         setIsConnected(false);
       }
@@ -53,6 +83,7 @@ export const ZoomProvider = ({ children }: { children: React.ReactNode }) => {
         connect,
         disconnect,
         refreshConnection,
+        refreshZoomToken,
       }}
     >
       {children}

@@ -27,9 +27,10 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-4">
-            <Avatar className="h-16 w-16">
+            <Avatar className="h-16 w-16 rounded-md">
               <AvatarImage
                 src={user?.user_metadata?.avatar_url}
+                className="rounded-sm"
                 alt="Profile picture"
               />
             </Avatar>

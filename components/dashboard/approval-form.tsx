@@ -229,7 +229,10 @@ export function ApprovalForm() {
           setLoadingZoom(false);
           return;
         }
-        if (approvalToEdit.zoom_meeting) {
+        if (
+          approvalToEdit.zoom_meeting &&
+          approvalToEdit.zoom_meeting.meeting_id
+        ) {
           // Update the existing meeting
           zoomMeeting = await updateMeeting(
             approvalToEdit.zoom_meeting.meeting_id,
