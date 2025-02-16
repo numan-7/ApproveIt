@@ -6,12 +6,6 @@ interface ZoomContextType {
   isConnected: boolean;
   connect: () => void;
   disconnect: () => Promise<void>;
-  createMeeting: (params: {
-    topic: string;
-    meetingStartTime: string;
-    duration: number;
-    invitees: string[];
-  }) => Promise<{ join_url: string; meeting_id: string } | null>;
   refreshConnection: () => Promise<void>;
 }
 
@@ -52,38 +46,12 @@ export const ZoomProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const createMeeting = async (params: {
-    topic: string;
-    meetingStartTime: string;
-    duration: number;
-    invitees: string[];
-  }) => {
-    try {
-      const res = await fetch('/api/zoom', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        return data;
-      } else {
-        console.error('Error creating meeting:', data.error);
-        return null;
-      }
-    } catch (error) {
-      console.error('Error creating meeting', error);
-      return null;
-    }
-  };
-
   return (
     <ZoomContext.Provider
       value={{
         isConnected,
         connect,
         disconnect,
-        createMeeting,
         refreshConnection,
       }}
     >
