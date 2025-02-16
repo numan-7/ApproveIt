@@ -19,7 +19,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Approval } from '@/types/approval';
 import { useRouter } from 'next/navigation';
-
+import { convertToLocalTime } from '@/utils/date';
 interface UpcomingApprovalsCalendarProps {
   approvals: Approval[];
 }
@@ -223,7 +223,7 @@ export function UpcomingApprovalsCalendar({
                         <div>
                           <p className="text-sm font-medium">{approval.name}</p>
                           <p className="text-xs text-gray-600">
-                            {new Date(approval.due_date).toLocaleDateString()}
+                            {convertToLocalTime(approval.due_date)}
                           </p>
                         </div>
                         <Badge
