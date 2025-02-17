@@ -158,7 +158,12 @@ export async function DELETE(
 
   const { data: existing, error: fetchError } = await supabase
     .from('approvals')
-    .select('requester')
+    .select(
+      `
+        requester,
+        attachments: attachments ( id, name, size, url, key )
+      `
+    )
     .eq('id', id)
     .single();
 
@@ -171,7 +176,11 @@ export async function DELETE(
     .from('approvals')
     .delete()
     .eq('id', id);
+
   if (error)
     return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const attachments = existing.attachments.map((att) => att.key);
+  await deleteUTFiles(attachments);
   return NextResponse.json({ message: 'Approval deleted successfully' });
 }
