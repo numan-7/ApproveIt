@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -15,20 +15,28 @@ import {
   ChevronRight,
   ArrowUpRight,
   ArrowDownLeft,
+  VideoIcon,
+  ClockAlert,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Approval } from '@/types/approval';
 import { useRouter } from 'next/navigation';
 import { convertToLocalTime } from '@/utils/date';
+
 interface UpcomingApprovalsCalendarProps {
   approvals: Approval[];
+}
+
+interface DayEvent {
+  approval: Approval;
+  isDue: boolean;
+  isMeeting: boolean;
 }
 
 export function UpcomingApprovalsCalendar({
   approvals,
 }: UpcomingApprovalsCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
-
   const router = useRouter();
 
   const daysInMonth = new Date(
@@ -50,15 +58,32 @@ export function UpcomingApprovalsCalendar({
     return 'incoming';
   }
 
-  const getApprovalsForDay = (day: number) => {
-    return approvals.filter((approval) => {
-      const approvalDate = new Date(approval.due_date);
-      return (
-        approvalDate.getDate() === day &&
-        approvalDate.getMonth() === currentDate.getMonth() &&
-        approvalDate.getFullYear() === currentDate.getFullYear()
-      );
-    });
+  // This function checks both dates.
+  // It returns an array of DayEvent objects for events that should appear on the given day
+  // For Approvals that have Due Date and Zoom Meeting, it will appear twice
+  const getEventsForDay = (day: number): DayEvent[] => {
+    return approvals.reduce<DayEvent[]>((acc, approval) => {
+      const dueDate = new Date(approval.due_date);
+      const meetingDate =
+        approval.zoom_meeting &&
+        approval.zoom_meeting.meeting_id &&
+        approval.zoom_meeting.start_time
+          ? new Date(approval.zoom_meeting.start_time)
+          : null;
+      const isDue =
+        dueDate.getDate() === day &&
+        dueDate.getMonth() === currentDate.getMonth() &&
+        dueDate.getFullYear() === currentDate.getFullYear();
+      const isMeeting = meetingDate
+        ? meetingDate.getDate() === day &&
+          meetingDate.getMonth() === currentDate.getMonth() &&
+          meetingDate.getFullYear() === currentDate.getFullYear()
+        : false;
+      if (isDue || isMeeting) {
+        acc.push({ approval, isDue, isMeeting });
+      }
+      return acc;
+    }, []);
   };
 
   const nextMonth = () => {
@@ -84,12 +109,13 @@ export function UpcomingApprovalsCalendar({
     }
   };
 
-  const oneWeekFromNow = new Date();
-  oneWeekFromNow.setDate(oneWeekFromNow.getDate() + 7);
+  // For the sidebar section, we want to show approvals due within a 2 week period
+  const twoWeekFromNow = new Date();
+  twoWeekFromNow.setDate(twoWeekFromNow.getDate() + 14);
   const approvalsWithinWeek = approvals
     .filter((approval) => {
-      const approvalDate = new Date(approval.due_date);
-      return approvalDate >= new Date() && approvalDate <= oneWeekFromNow;
+      const dueDate = new Date(approval.due_date);
+      return dueDate >= new Date() && dueDate <= twoWeekFromNow;
     })
     .sort(
       (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
@@ -127,70 +153,88 @@ export function UpcomingApprovalsCalendar({
                 ))}
               </div>
             </div>
-            <div className="flex-grow grid grid-cols-7 gap-px justify-items-center bg-gray-">
+            <div className="flex-grow grid grid-cols-7 gap-px justify-items-center">
               {Array.from({ length: firstDayOfMonth }).map((_, index) => (
                 <div key={`empty-${index}`} className="p-2" />
               ))}
               {Array.from({ length: daysInMonth }).map((_, index) => {
                 const day = index + 1;
-                const dayApprovals = getApprovalsForDay(day);
+                const eventsForDay = getEventsForDay(day);
+                const dueCount = eventsForDay.filter((e) => e.isDue).length;
+                const meetingCount = eventsForDay.filter(
+                  (e) => e.isMeeting
+                ).length;
+                const hasItems = eventsForDay.length > 0;
                 return (
                   <Popover key={day}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="ghost"
                         className={`p-0 h-9 w-9 ${
-                          dayApprovals.length > 0
-                            ? 'bg-blue-100 hover:bg-blue-200'
-                            : ''
+                          hasItems ? 'bg-blue-100 hover:bg-blue-200' : ''
                         }`}
                       >
-                        <div className="flex flex-col">
+                        <div className="flex flex-col items-center relative">
                           <span className="text-sm">{day}</span>
-                          {dayApprovals.length > 0 && (
-                            <span className="text-[10px] leading-none text-blue-600">
-                              {dayApprovals.length}
-                            </span>
-                          )}
+                          <div className="absolute top-3 flex gap-1">
+                            {dueCount > 0 && (
+                              <span className="flex items-center text-[10px] text-blue-600">
+                                D:{dueCount}
+                              </span>
+                            )}
+                            {meetingCount > 0 && (
+                              <span className="flex items-center text-[10px] text-blue-600">
+                                M:{meetingCount}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </Button>
                     </PopoverTrigger>
-                    {dayApprovals.length > 0 && (
+                    {hasItems && (
                       <PopoverContent className="w-[90vw] md:w-64 font-dm">
-                        <h3 className="font-semibold mb-2">Approvals Due:</h3>
+                        <h3 className="font-semibold mb-2">Events:</h3>
                         <ul className="list-none pl-0">
-                          {dayApprovals.map((approval) => {
-                            const type = getApprovalType(approval);
-                            return (
-                              <li
-                                key={approval.id}
-                                className={`text-sm mb-2 hover:bg-gray-100 bg-gray-50
-                                p-1 rounded cursor-pointer`}
-                                onClick={() => {
-                                  router.push(
-                                    `dashboard/approval/${approval.id}?type=${btoa(type + ' ' + approval.name)}`
-                                  );
-                                }}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span>{approval.name}</span>
-                                  <Badge
-                                    variant="outline"
-                                    className={`${getBackgroundForStatus(
-                                      approval.status
-                                    )}`}
-                                  >
-                                    {type === 'incoming' ? (
-                                      <ArrowDownLeft className="h-3 w-3 mr-1" />
-                                    ) : (
-                                      <ArrowUpRight className="h-3 w-3 mr-1" />
-                                    )}
-                                    {type}
-                                  </Badge>
-                                </div>
-                              </li>
-                            );
-                          })}
+                          {eventsForDay.map(
+                            ({ approval, isDue, isMeeting }) => {
+                              const type = getApprovalType(approval);
+                              return (
+                                <li
+                                  key={approval.id}
+                                  className="text-sm mb-2 hover:bg-gray-100 bg-gray-50 p-1 rounded cursor-pointer"
+                                  onClick={() => {
+                                    router.push(
+                                      `dashboard/approval/${approval.id}?type=${btoa(
+                                        type + ' ' + approval.name
+                                      )}`
+                                    );
+                                  }}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="flex items-center gap-1">
+                                      {approval.name}
+                                      {isMeeting && (
+                                        <VideoIcon className="h-3 w-3 text-blue-500" />
+                                      )}
+                                    </span>
+                                    <Badge
+                                      variant="outline"
+                                      className={`${getBackgroundForStatus(
+                                        approval.status
+                                      )}`}
+                                    >
+                                      {type === 'incoming' ? (
+                                        <ArrowDownLeft className="h-3 w-3 mr-1" />
+                                      ) : (
+                                        <ArrowUpRight className="h-3 w-3 mr-1" />
+                                      )}
+                                      {type}
+                                    </Badge>
+                                  </div>
+                                </li>
+                              );
+                            }
+                          )}
                         </ul>
                       </PopoverContent>
                     )}
@@ -222,13 +266,27 @@ export function UpcomingApprovalsCalendar({
                       <div className="flex justify-between items-start">
                         <div>
                           <p className="text-sm font-medium">{approval.name}</p>
-                          <p className="text-xs text-gray-600">
+                          <div className="text-xs text-gray-600 flex items-center gap-1">
+                            <ClockAlert className="h-3 w-3" />
                             {convertToLocalTime(approval.due_date)}
-                          </p>
+                          </div>
+                          {approval.zoom_meeting &&
+                            approval.zoom_meeting.meeting_id && (
+                              <div className="flex items-center gap-1 text-blue-500">
+                                <VideoIcon className="h-3 w-3" />
+                                <span className="text-xs ">
+                                  {convertToLocalTime(
+                                    approval.zoom_meeting.start_time
+                                  )}
+                                </span>
+                              </div>
+                            )}
                         </div>
                         <Badge
                           variant="outline"
-                          className={`${getBackgroundForStatus(approval.status)}`}
+                          className={`${getBackgroundForStatus(
+                            approval.status
+                          )}`}
                         >
                           {type === 'incoming' ? (
                             <ArrowDownLeft className="h-3 w-3 mr-1" />
