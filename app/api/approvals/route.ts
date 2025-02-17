@@ -34,14 +34,19 @@ export async function GET(req: Request) {
       approvers,
       comments: comments ( id, name, user_email, comment, created_at ),
       attachments: attachments ( name, size, url, key ),
-      events: events ( id, date, type, name, approval_id)
+      events: events ( id, date, type, name, approval_id),
+      zoom_meeting
     `
     )
     .eq('requester', user.email)
     .order('date', { ascending: true });
 
-  const incomingApprovalslength = incoming.filter((incoming: any) => incoming.status === 'pending').length;
-  const outgoingApprovalslength = outgoing?.filter((outgoing: any) => outgoing.status === 'pending').length;
+  const incomingApprovalslength = incoming.filter(
+    (incoming: any) => incoming.status === 'pending'
+  ).length;
+  const outgoingApprovalslength = outgoing?.filter(
+    (outgoing: any) => outgoing.status === 'pending'
+  ).length;
 
   let allEvents: {
     id: string;
