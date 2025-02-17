@@ -12,6 +12,7 @@ import { useMyApprovals } from '@/hooks/useMyApprovals';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import { useAuth } from '@/context/AuthContext';
 import { CommentsCard } from '@/components/dashboard/approval-comments';
+import { ApprovalZoom } from '@/components/dashboard/approval-zoom';
 
 export default function ApprovalDetail() {
   const [approval, setApproval] = useState<Approval | null>(null);
@@ -141,13 +142,16 @@ export default function ApprovalDetail() {
         </Button>
       </div>
       <div className="flex flex-col lg:flex-row gap-4 lg:pb-4">
-        <div className="w-full lg:w-2/3 space-y-8">
+        <div className="w-full lg:w-2/3 space-y-4">
           <ApprovalCard approval={approval} />
           {decodedType === 'outgoing' && (
             <ApprovalTimeline events={approval.events} />
           )}
         </div>
-        <div className="w-full lg:w-1/3">
+        <div className="w-full lg:w-1/3 space-y-4">
+          {approval.zoom_meeting && approval.zoom_meeting.join_url && (
+            <ApprovalZoom zoom={approval.zoom_meeting} />
+          )}
           <CommentsCard
             comments={comments}
             onAddComment={handleAddComment}

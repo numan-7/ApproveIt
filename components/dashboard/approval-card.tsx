@@ -65,7 +65,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <ApprovalDetailsCard approval={approval} />
       <ApprovalStatusCard
         approval={approval}

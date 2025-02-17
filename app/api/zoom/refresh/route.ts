@@ -47,14 +47,15 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     );
   }
 
-  const { access_token, refresh_token, last_updated } = tokenData;
+  const { refresh_token, last_updated } = tokenData;
 
   const lastUpdated = new Date(last_updated);
   const now = new Date();
   const tokenAge = (now.getTime() - lastUpdated.getTime()) / 1000;
 
   // been last than 55 minutes since last update
-  if (tokenAge < 0) {
+  if (tokenAge < 3300) {
+    console.log('Token is still fresh');
     return NextResponse.json({ refreshed: false });
   }
 
@@ -62,7 +63,7 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     const newTokenData = await refreshZoomToken(refresh_token);
 
     // update the database with the new token values and current timestamp
-    const { error: updateError } = await supabase
+    const { data: newData, error: updateError } = await supabase
       .from('user_zoom_tokens')
       .update({
         access_token: newTokenData.access_token,
