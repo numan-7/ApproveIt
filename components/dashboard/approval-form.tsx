@@ -234,14 +234,15 @@ export function ApprovalForm() {
           approvalToEdit.zoom_meeting.meeting_id
         ) {
           // Update the existing meeting
-          zoomMeeting = await updateMeeting(
+          zoomMeeting = {
+            topic: name,
+            meetingStartTime: zoomStartTime.toISOString(),
+            duration: zoomDuration,
+            invitees: approvers.map((a) => a.email),
+          };
+          await updateMeeting(
             approvalToEdit.zoom_meeting.meeting_id,
-            {
-              topic: name,
-              meetingStartTime: zoomStartTime.toISOString(),
-              duration: zoomDuration,
-              invitees: approvers.map((a) => a.email),
-            }
+            zoomMeeting
           );
           // Preserve the original join_url
           zoomMeeting = {

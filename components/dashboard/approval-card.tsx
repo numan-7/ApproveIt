@@ -54,14 +54,14 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
     }
   };
 
-  const handleApproveApproval = () => {
-    approveApproval(approval.id);
-    router.back();
+  const handleApproveApproval = async () => {
+    await approveApproval(approval.id);
+    window.location.reload();
   };
 
-  const handleDenyApproval = () => {
-    denyApproval(approval.id);
-    router.back();
+  const handleDenyApproval = async () => {
+    await denyApproval(approval.id);
+    window.location.reload();
   };
 
   return (
