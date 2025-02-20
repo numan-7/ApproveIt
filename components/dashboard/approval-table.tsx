@@ -26,6 +26,8 @@ import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 import { convertToLocalTime } from '@/utils/date';
 import { toast } from 'react-toastify';
+import { SpinnerLoader } from '../ui/spinner-loader';
+import { Suspense } from 'react';
 
 interface ApprovalTableProps {
   approvals: Approval[];
@@ -231,289 +233,291 @@ export function ApprovalTable({
 
   const { hasApproved, hasDenied } = getUserApprovalStatus();
 
-  console.log(hasApproved, hasDenied);
-
   return (
-    <div>
-      <div className="flex flex-col md:flex-row justify-start items-center gap-2 mb-4">
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search Approvals By Name..."
-            className="pl-8 pr-2 py-1 border border-gray-300 rounded-md text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+    <Suspense fallback={<SpinnerLoader />}>
+      <div>
+        <div className="flex flex-col md:flex-row justify-start items-center gap-2 mb-4">
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search Approvals By Name..."
+              className="pl-8 pr-2 py-1 border border-gray-300 rounded-md text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
 
-        <div className="relative inline-block w-full md:w-auto">
-          <Filter className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="border border-gray-300 rounded-md py-1 text-sm pl-8 pr-2 appearance-none cursor-pointer hover:bg-gray-50 w-full md:w-auto"
-          >
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
-          </select>
-        </div>
+          <div className="relative inline-block w-full md:w-auto">
+            <Filter className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-gray-300 rounded-md py-1 text-sm pl-8 pr-2 appearance-none cursor-pointer hover:bg-gray-50 w-full md:w-auto"
+            >
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
 
-        <div className="w-full md:min-w-[220px]">
-          <div
-            className={`flex items-center space-x-2 ${
-              selectedIds.length > 0 ? 'visible' : 'invisible'
-            }`}
-          >
-            {type === 'outgoing' && selectedIds.length === 1 && (
-              <Button
-                onClick={handleEdit}
-                size="sm"
-                className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
-              >
-                <Pencil className="w-4 h-4" />
-                Edit
-              </Button>
-            )}
-            {type === 'incoming' && selectedIds.length > 0 && (
-              <>
+          <div className="w-full md:min-w-[220px]">
+            <div
+              className={`flex items-center space-x-2 ${
+                selectedIds.length > 0 ? 'visible' : 'invisible'
+              }`}
+            >
+              {type === 'outgoing' && selectedIds.length === 1 && (
                 <Button
-                  onClick={() => handleAction('approve')}
+                  onClick={handleEdit}
                   size="sm"
-                  variant="outline"
-                  className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
-                  disabled={hasApproved}
+                  className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
                 >
-                  <Check className="w-4 h-4" />
-                  Approve
+                  <Pencil className="w-4 h-4" />
+                  Edit
                 </Button>
+              )}
+              {type === 'incoming' && selectedIds.length > 0 && (
+                <>
+                  <Button
+                    onClick={() => handleAction('approve')}
+                    size="sm"
+                    variant="outline"
+                    className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-white hover:text-white"
+                    disabled={hasApproved}
+                  >
+                    <Check className="w-4 h-4" />
+                    Approve
+                  </Button>
+                  <Button
+                    onClick={() => handleAction('deny')}
+                    size="sm"
+                    variant="destructive"
+                    className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
+                    disabled={hasDenied}
+                  >
+                    <X className="w-4 h-4" />
+                    Deny
+                  </Button>
+                </>
+              )}
+              {type === 'outgoing' && (
                 <Button
-                  onClick={() => handleAction('deny')}
+                  onClick={() => handleAction('delete')}
                   size="sm"
                   variant="destructive"
                   className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
-                  disabled={hasDenied}
                 >
                   <X className="w-4 h-4" />
-                  Deny
+                  Delete
                 </Button>
-              </>
-            )}
-            {type === 'outgoing' && (
-              <Button
-                onClick={() => handleAction('delete')}
-                size="sm"
-                variant="destructive"
-                className="pl-8 shadow-none py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1"
-              >
-                <X className="w-4 h-4" />
-                Delete
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="overflow-x-auto">
-        <Table className="w-full mx-auto">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[calc(100%/24)]">
-                <input
-                  type="checkbox"
-                  onChange={toggleSelectAll}
-                  checked={
-                    displayedApprovals.length > 0 &&
-                    displayedApprovals.every((a) => selectedIds.includes(a.id))
-                  }
-                />
-              </TableHead>
-              <TableHead className="w-1/6">
-                <button
-                  onClick={() => handleSort('name')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Name</span>
-                  {sortField === 'name' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead className="w-1/6">
-                <button
-                  onClick={() => handleSort('requester')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Requester</span>
-                  {sortField === 'requester' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead className="w-1/6">
-                <button
-                  onClick={() => handleSort('description')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Description</span>
-                  {sortField === 'description' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead className="w-[calc(100%/20)]">
-                <button
-                  onClick={() => handleSort('approvers')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Approvers #</span>
-                  {sortField === 'approvers' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead className="w-[calc(100%/24)]">
-                <button
-                  onClick={() => handleSort('date')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Created</span>
-                  {sortField === 'date' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead className="w-1/12">
-                <button
-                  onClick={() => handleSort('due_date')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Due By</span>
-                  {sortField === 'due_date' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead className="w-[calc(100%/24)]">
-                <button
-                  onClick={() => handleSort('priority')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Priority</span>
-                  {sortField === 'priority' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead className="w-[calc(100%/24)]">
-                <button
-                  onClick={() => handleSort('expired')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Expired</span>
-                  {sortField === 'expired' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-              <TableHead className="w-[calc(100%/24)]">
-                <button
-                  onClick={() => handleSort('status')}
-                  className="flex items-center gap-2"
-                >
-                  <span>Status</span>
-                  {sortField === 'status' &&
-                    (sortDirection === 'asc' ? (
-                      <ChevronUp size={16} className="text-gray-500" />
-                    ) : (
-                      <ChevronDown size={16} className="text-gray-500" />
-                    ))}
-                </button>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {displayedApprovals.map((approval) => (
-              <TableRow key={approval.id} className="py-0">
-                <TableCell className="py-0">
+        <div className="overflow-x-auto">
+          <Table className="w-full mx-auto">
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[calc(100%/24)]">
                   <input
                     type="checkbox"
-                    checked={selectedIds.includes(approval.id)}
-                    onChange={() => toggleSelectOne(approval.id)}
+                    onChange={toggleSelectAll}
+                    checked={
+                      displayedApprovals.length > 0 &&
+                      displayedApprovals.every((a) =>
+                        selectedIds.includes(a.id)
+                      )
+                    }
                   />
-                </TableCell>
-                <TableCell className="truncate max-w-[150px] py-0">
-                  <Link
-                    href={`/dashboard/approval/${approval.id}?type=${
-                      approval.requester === user?.email
-                        ? btoa('outgoing' + ' ' + user?.email)
-                        : btoa('incoming' + ' ' + user?.email)
-                    }`}
-                    className="text-blue-600 hover:underline"
+                </TableHead>
+                <TableHead className="w-1/6">
+                  <button
+                    onClick={() => handleSort('name')}
+                    className="flex items-center gap-2"
                   >
-                    {approval.name}
-                  </Link>
-                </TableCell>
-                <TableCell className="truncate max-w-[150px] py-1">
-                  {approval.requester}
-                </TableCell>
-                <TableCell className="max-w-[150px] truncate overflow-hidden whitespace-nowrap text-ellipsis py-0">
-                  {approval.description}
-                </TableCell>
-                <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.approvers.length}
-                </TableCell>
-                <TableCell className="truncate max-w-[150px] py-0">
-                  {convertToLocalTime(approval.date).slice(0, 9)}
-                </TableCell>
-                <TableCell className="truncate max-w-[150px] py-0">
-                  {convertToLocalTime(approval.due_date)}
-                </TableCell>
-                <TableCell className="py-0">
-                  <Badge
-                    variant="outline"
-                    className={getPriorityColor(approval.priority)}
+                    <span>Name</span>
+                    {sortField === 'name' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
+                <TableHead className="w-1/6">
+                  <button
+                    onClick={() => handleSort('requester')}
+                    className="flex items-center gap-2"
                   >
-                    {approval.priority}
-                  </Badge>
-                </TableCell>
-                <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.expired ? 'Yes' : 'No'}
-                </TableCell>
-                <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.status}
-                </TableCell>
+                    <span>Requester</span>
+                    {sortField === 'requester' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
+                <TableHead className="w-1/6">
+                  <button
+                    onClick={() => handleSort('description')}
+                    className="flex items-center gap-2"
+                  >
+                    <span>Description</span>
+                    {sortField === 'description' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
+                <TableHead className="w-[calc(100%/20)]">
+                  <button
+                    onClick={() => handleSort('approvers')}
+                    className="flex items-center gap-2"
+                  >
+                    <span>Approvers #</span>
+                    {sortField === 'approvers' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
+                <TableHead className="w-[calc(100%/24)]">
+                  <button
+                    onClick={() => handleSort('date')}
+                    className="flex items-center gap-2"
+                  >
+                    <span>Created</span>
+                    {sortField === 'date' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
+                <TableHead className="w-1/12">
+                  <button
+                    onClick={() => handleSort('due_date')}
+                    className="flex items-center gap-2"
+                  >
+                    <span>Due By</span>
+                    {sortField === 'due_date' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
+                <TableHead className="w-[calc(100%/24)]">
+                  <button
+                    onClick={() => handleSort('priority')}
+                    className="flex items-center gap-2"
+                  >
+                    <span>Priority</span>
+                    {sortField === 'priority' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
+                <TableHead className="w-[calc(100%/24)]">
+                  <button
+                    onClick={() => handleSort('expired')}
+                    className="flex items-center gap-2"
+                  >
+                    <span>Expired</span>
+                    {sortField === 'expired' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
+                <TableHead className="w-[calc(100%/24)]">
+                  <button
+                    onClick={() => handleSort('status')}
+                    className="flex items-center gap-2"
+                  >
+                    <span>Status</span>
+                    {sortField === 'status' &&
+                      (sortDirection === 'asc' ? (
+                        <ChevronUp size={16} className="text-gray-500" />
+                      ) : (
+                        <ChevronDown size={16} className="text-gray-500" />
+                      ))}
+                  </button>
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {displayedApprovals.map((approval) => (
+                <TableRow key={approval.id} className="py-0">
+                  <TableCell className="py-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(approval.id)}
+                      onChange={() => toggleSelectOne(approval.id)}
+                    />
+                  </TableCell>
+                  <TableCell className="truncate max-w-[150px] py-0">
+                    <Link
+                      href={`/dashboard/approval/${approval.id}?type=${
+                        approval.requester === user?.email
+                          ? btoa('outgoing' + ' ' + user?.email)
+                          : btoa('incoming' + ' ' + user?.email)
+                      }`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {approval.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="truncate max-w-[150px] py-1">
+                    {approval.requester}
+                  </TableCell>
+                  <TableCell className="max-w-[150px] truncate overflow-hidden whitespace-nowrap text-ellipsis py-0">
+                    {approval.description}
+                  </TableCell>
+                  <TableCell className="truncate max-w-[150px] py-0">
+                    {approval.approvers.length}
+                  </TableCell>
+                  <TableCell className="truncate max-w-[150px] py-0">
+                    {convertToLocalTime(approval.date).slice(0, 9)}
+                  </TableCell>
+                  <TableCell className="truncate max-w-[150px] py-0">
+                    {convertToLocalTime(approval.due_date)}
+                  </TableCell>
+                  <TableCell className="py-0">
+                    <Badge
+                      variant="outline"
+                      className={getPriorityColor(approval.priority)}
+                    >
+                      {approval.priority}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="truncate max-w-[150px] py-0">
+                    {approval.expired ? 'Yes' : 'No'}
+                  </TableCell>
+                  <TableCell className="truncate max-w-[150px] py-0">
+                    {approval.status}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
-    </div>
+    </Suspense>
   );
 }

@@ -20,6 +20,7 @@ import { convertToLocalTime } from '@/utils/date';
 import { UploadDropzone } from '@/utils/uploadthing/uploadthing';
 import { useZoomMeeting } from '@/hooks/useZoomMeeting';
 import { toast } from 'react-toastify';
+import { Suspense } from 'react';
 
 import { join } from 'path';
 
@@ -412,214 +413,218 @@ export function ApprovalForm() {
   );
 
   return (
-    <>
-      {isLoading ? (
-        <SpinnerLoader />
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && <p className="text-red-600">{error}</p>}
+    <Suspense fallback={<SpinnerLoader />}>
+      <>
+        {isLoading ? (
+          <SpinnerLoader />
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && <p className="text-red-600">{error}</p>}
 
-          {/* Request Name */}
-          <div className={formGroupClass}>
-            <Label htmlFor="name" className="block mb-1">
-              Request Name
-              <RedAsterisk />
-            </Label>
-            <Input
-              id="name"
-              placeholder="Enter approval name"
-              required
-              disabled={isFileUploading || isSubmitting || !!deletingFileKey}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-
-          {/* Description */}
-          <div className={formGroupClass}>
-            <Label htmlFor="description" className="block mb-1">
-              Description
-              <RedAsterisk />
-            </Label>
-            <Textarea
-              id="description"
-              placeholder="Enter approval description"
-              required
-              disabled={isFileUploading || isSubmitting || !!deletingFileKey}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-
-          {/* Approvers */}
-          <div className={formGroupClass}>
-            <Label className="block mb-1">
-              Approver(s)
-              <RedAsterisk />
-            </Label>
-            <div className="flex space-x-2 mb-2">
+            {/* Request Name */}
+            <div className={formGroupClass}>
+              <Label htmlFor="name" className="block mb-1">
+                Request Name
+                <RedAsterisk />
+              </Label>
               <Input
-                type="email"
-                placeholder="Enter approver email"
+                id="name"
+                placeholder="Enter approval name"
+                required
                 disabled={isFileUploading || isSubmitting || !!deletingFileKey}
-                value={newApprover}
-                onChange={(e) => setNewApprover(e.target.value)}
-                onKeyDown={handleApproverKeyDown}
-                className="flex-grow"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
-              <Button type="button" onClick={addApproverHandler}>
-                <PlusCircle className="mr-2 h-4 w-4" /> Add
-              </Button>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {approvers.map((approver) => (
-                <Badge
-                  key={approver.email}
-                  variant="outline"
-                  className="font-normal text-sm pl-2 pr-1"
-                >
-                  {approver.name}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-auto p-0 ml-2 text-red-700 hover:text-red-700 rounded-sm"
-                    onClick={() => removeApprover(approver.email)}
-                    disabled={
-                      isFileUploading || isSubmitting || !!deletingFileKey
-                    }
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </Badge>
-              ))}
+
+            {/* Description */}
+            <div className={formGroupClass}>
+              <Label htmlFor="description" className="block mb-1">
+                Description
+                <RedAsterisk />
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Enter approval description"
+                required
+                disabled={isFileUploading || isSubmitting || !!deletingFileKey}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </div>
-          </div>
 
-          {/* Due Date */}
-          <div className={formGroupClass}>
-            <DateTimePicker date={dueDate} setDate={setDueDate} />
-          </div>
-
-          {/* Priority */}
-          <div className={formGroupClass}>
-            <Label className="block mb-1">
-              Priority
-              <RedAsterisk />
-            </Label>
-            <RadioGroup
-              value={priority}
-              onValueChange={(value: string) =>
-                setPriority(value as 'high' | 'medium' | 'low')
-              }
-            >
-              <div className="flex flex-col sm:flex-row sm:space-x-4 gap-2">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="low" id="priority-low" />
-                  <Label htmlFor="priority-low">Low</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="medium" id="priority-medium" />
-                  <Label htmlFor="priority-medium">Medium</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="high" id="priority-high" />
-                  <Label htmlFor="priority-high">High</Label>
-                </div>
-              </div>
-            </RadioGroup>
-          </div>
-
-          {/* Attachments */}
-          <div className={formGroupClass}>
-            <Label htmlFor="attachments" className="block mb-1">
-              Attachments
-            </Label>
-            <UploadDropzone
-              endpoint="imageUploader"
-              onBeforeUploadBegin={(files: File[]) => {
-                setIsFileUploading(true);
-                return files;
-              }}
-              // @ts-ignore
-              onClientUploadComplete={(files: FileUpload[]) => {
-                handleUploadComplete(files);
-                setIsFileUploading(false);
-              }}
-              onUploadError={(error: Error) => {
-                setError(`Upload error: ${error.message}`);
-                setIsFileUploading(false);
-              }}
-              config={{ cn: twMerge }}
-              className="flex items-center justify-center ut-button:font-dm ut-button:h-9 ut-button:text-sm ut-button:bg-black hover:ut-button:bg-primary/90"
-              disabled={isFileUploading || isSubmitting || !!deletingFileKey}
-            />
-            {attachments.length > 0 && (
-              <ul className="list-disc pl-5 mt-2 text-sm">
-                {attachments.map((file, i) => (
-                  <li key={i} className="flex items-center gap-2">
-                    {deletingFileKey === file.key ? (
-                      <Loader2 className="animate-spin h-4 w-4 text-red-700" />
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="p-0 text-red-700 hover:text-red-700"
-                        onClick={() => handleDeleteAttachment(file.key)}
-                        disabled={
-                          isFileUploading || isSubmitting || !!deletingFileKey
-                        }
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <span>{file.name}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Zoom Meeting Section */}
-          <div className={formGroupClass}>
-            <Label className="block mb-1">Zoom Meeting</Label>
-            <div className="flex items-center gap-2 mb-2">
-              <input
-                type="checkbox"
-                checked={includeZoom}
-                onChange={(e) => {
-                  setIncludeZoom(e.target.checked);
-                  if (!e.target.checked) {
-                    setZoomStartTime(undefined);
+            {/* Approvers */}
+            <div className={formGroupClass}>
+              <Label className="block mb-1">
+                Approver(s)
+                <RedAsterisk />
+              </Label>
+              <div className="flex space-x-2 mb-2">
+                <Input
+                  type="email"
+                  placeholder="Enter approver email"
+                  disabled={
+                    isFileUploading || isSubmitting || !!deletingFileKey
                   }
-                }}
-              />
-              <span className="text-sm">
-                Create a 30m Zoom meeting for this Approval?
-              </span>
-            </div>
-            {includeZoom && (
-              <div className="space-y-2">
-                <DateTimePicker
-                  isZoom={true}
-                  date={zoomStartTime}
-                  setDate={setZoomStartTime}
+                  value={newApprover}
+                  onChange={(e) => setNewApprover(e.target.value)}
+                  onKeyDown={handleApproverKeyDown}
+                  className="flex-grow"
                 />
+                <Button type="button" onClick={addApproverHandler}>
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add
+                </Button>
               </div>
-            )}
-          </div>
+              <div className="flex flex-wrap gap-2">
+                {approvers.map((approver) => (
+                  <Badge
+                    key={approver.email}
+                    variant="outline"
+                    className="font-normal text-sm pl-2 pr-1"
+                  >
+                    {approver.name}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-0 ml-2 text-red-700 hover:text-red-700 rounded-sm"
+                      onClick={() => removeApprover(approver.email)}
+                      disabled={
+                        isFileUploading || isSubmitting || !!deletingFileKey
+                      }
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </Badge>
+                ))}
+              </div>
+            </div>
 
-          <Button
-            type="submit"
-            className="w-full flex items-center justify-center"
-            disabled={isSubmitting || isFileUploading || !!deletingFileKey}
-          >
-            {(isSubmitting || isFileUploading || loadingZoom) && (
-              <Loader2 className="animate-spin h-4 w-4 mr-2" />
-            )}
-            {editId ? 'Update Approval Request' : 'Create Approval Request'}
-          </Button>
-        </form>
-      )}
-    </>
+            {/* Due Date */}
+            <div className={formGroupClass}>
+              <DateTimePicker date={dueDate} setDate={setDueDate} />
+            </div>
+
+            {/* Priority */}
+            <div className={formGroupClass}>
+              <Label className="block mb-1">
+                Priority
+                <RedAsterisk />
+              </Label>
+              <RadioGroup
+                value={priority}
+                onValueChange={(value: string) =>
+                  setPriority(value as 'high' | 'medium' | 'low')
+                }
+              >
+                <div className="flex flex-col sm:flex-row sm:space-x-4 gap-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="low" id="priority-low" />
+                    <Label htmlFor="priority-low">Low</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="medium" id="priority-medium" />
+                    <Label htmlFor="priority-medium">Medium</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="high" id="priority-high" />
+                    <Label htmlFor="priority-high">High</Label>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Attachments */}
+            <div className={formGroupClass}>
+              <Label htmlFor="attachments" className="block mb-1">
+                Attachments
+              </Label>
+              <UploadDropzone
+                endpoint="imageUploader"
+                onBeforeUploadBegin={(files: File[]) => {
+                  setIsFileUploading(true);
+                  return files;
+                }}
+                // @ts-ignore
+                onClientUploadComplete={(files: FileUpload[]) => {
+                  handleUploadComplete(files);
+                  setIsFileUploading(false);
+                }}
+                onUploadError={(error: Error) => {
+                  setError(`Upload error: ${error.message}`);
+                  setIsFileUploading(false);
+                }}
+                config={{ cn: twMerge }}
+                className="flex items-center justify-center ut-button:font-dm ut-button:h-9 ut-button:text-sm ut-button:bg-black hover:ut-button:bg-primary/90"
+                disabled={isFileUploading || isSubmitting || !!deletingFileKey}
+              />
+              {attachments.length > 0 && (
+                <ul className="list-disc pl-5 mt-2 text-sm">
+                  {attachments.map((file, i) => (
+                    <li key={i} className="flex items-center gap-2">
+                      {deletingFileKey === file.key ? (
+                        <Loader2 className="animate-spin h-4 w-4 text-red-700" />
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-0 text-red-700 hover:text-red-700"
+                          onClick={() => handleDeleteAttachment(file.key)}
+                          disabled={
+                            isFileUploading || isSubmitting || !!deletingFileKey
+                          }
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <span>{file.name}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Zoom Meeting Section */}
+            <div className={formGroupClass}>
+              <Label className="block mb-1">Zoom Meeting</Label>
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={includeZoom}
+                  onChange={(e) => {
+                    setIncludeZoom(e.target.checked);
+                    if (!e.target.checked) {
+                      setZoomStartTime(undefined);
+                    }
+                  }}
+                />
+                <span className="text-sm">
+                  Create a 30m Zoom meeting for this Approval?
+                </span>
+              </div>
+              {includeZoom && (
+                <div className="space-y-2">
+                  <DateTimePicker
+                    isZoom={true}
+                    date={zoomStartTime}
+                    setDate={setZoomStartTime}
+                  />
+                </div>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full flex items-center justify-center"
+              disabled={isSubmitting || isFileUploading || !!deletingFileKey}
+            >
+              {(isSubmitting || isFileUploading || loadingZoom) && (
+                <Loader2 className="animate-spin h-4 w-4 mr-2" />
+              )}
+              {editId ? 'Update Approval Request' : 'Create Approval Request'}
+            </Button>
+          </form>
+        )}
+      </>
+    </Suspense>
   );
 }

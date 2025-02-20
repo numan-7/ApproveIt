@@ -13,6 +13,8 @@ import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import { useAuth } from '@/context/AuthContext';
 import { CommentsCard } from '@/components/dashboard/approval-comments';
 import { ApprovalZoom } from '@/components/dashboard/approval-zoom';
+import { toast } from 'react-toastify';
+import { Suspense } from 'react';
 
 export default function ApprovalDetail() {
   const [approval, setApproval] = useState<Approval | null>(null);
@@ -123,42 +125,47 @@ export default function ApprovalDetail() {
         console.error('Error deleting comment:', data.error);
       }
     } catch (error) {
+      toast.error(
+        'Error deleting comment, there is a problem with the server.'
+      );
       console.error('Error deleting comment:', error);
     }
   };
 
   return (
-    <div className="p-4 space-y-4 h-screen">
-      <div className="space-y-4 mb-4">
-        <h1 className="text-3xl font-bold">Approval Details</h1>
-        <Button
-          variant="outline"
-          size="sm"
-          className="flex items-center"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-      </div>
-      <div className="flex flex-col lg:flex-row gap-4 lg:pb-4">
-        <div className="w-full lg:w-2/3 space-y-4">
-          <ApprovalCard approval={approval} />
-          {decodedType === 'outgoing' && (
-            <ApprovalTimeline events={approval.events} />
-          )}
+    <Suspense fallback={<SpinnerLoader />}>
+      <div className="p-4 space-y-4 h-screen">
+        <div className="space-y-4 mb-4">
+          <h1 className="text-3xl font-bold">Approval Details</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
+          </Button>
         </div>
-        <div className="w-full lg:w-1/3 space-y-4">
-          {approval.zoom_meeting && approval.zoom_meeting.join_url && (
-            <ApprovalZoom zoom={approval.zoom_meeting} />
-          )}
-          <CommentsCard
-            comments={comments}
-            onAddComment={handleAddComment}
-            onDeleteComment={handleDeleteComment}
-          />
+        <div className="flex flex-col lg:flex-row gap-4 lg:pb-4">
+          <div className="w-full lg:w-2/3 space-y-4">
+            <ApprovalCard approval={approval} />
+            {decodedType === 'outgoing' && (
+              <ApprovalTimeline events={approval.events} />
+            )}
+          </div>
+          <div className="w-full lg:w-1/3 space-y-4">
+            {approval.zoom_meeting && approval.zoom_meeting.join_url && (
+              <ApprovalZoom zoom={approval.zoom_meeting} />
+            )}
+            <CommentsCard
+              comments={comments}
+              onAddComment={handleAddComment}
+              onDeleteComment={handleDeleteComment}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 }
