@@ -126,6 +126,7 @@ export async function PATCH(
         due_date,
         priority,
         approvers,
+        expired,
         attachments: attachments ( id, name, size, url, key )
         comments: comments ( id, name, user_email, comment, created_at ),
       `

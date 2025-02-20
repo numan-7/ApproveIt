@@ -35,7 +35,8 @@ export async function GET(req: Request) {
       comments: comments ( id, name, user_email, comment, created_at ),
       attachments: attachments ( name, size, url, key ),
       events: events ( id, date, type, name, approval_id),
-      zoom_meeting
+      zoom_meeting,
+      expired
     `
     )
     .eq('requester', user.email)
