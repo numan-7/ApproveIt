@@ -66,7 +66,10 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
   return (
     <div className="space-y-4">
-      <ApprovalDetailsCard approval={approval} />
+      <ApprovalDetailsCard
+        approval={approval}
+        currentUserApprover={currentUserApprover}
+      />
       <ApprovalStatusCard
         approval={approval}
         user={user}
@@ -82,9 +85,17 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
 interface ApprovalDetailsCardProps {
   approval: Approval;
+  currentUserApprover?: {
+    email: string;
+    didApprove: boolean | null;
+    name: string;
+  };
 }
 
-function ApprovalDetailsCard({ approval }: ApprovalDetailsCardProps) {
+function ApprovalDetailsCard({
+  approval,
+  currentUserApprover,
+}: ApprovalDetailsCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -92,6 +103,16 @@ function ApprovalDetailsCard({ approval }: ApprovalDetailsCardProps) {
           <FileText className="h-5 w-5 mr-2" />
           Approval Details
         </CardTitle>
+        {approval.expired && (
+          <div className="flex items-center justify-between p-3 font-dm bg-red-50 rounded-lg">
+            <span className="text-red-500 font-semibold">
+              {currentUserApprover &&
+              currentUserApprover.email === approval.requester
+                ? 'Approval expired! You are still able to edit or delete this approval.'
+                : 'Approval has expired! Please contact the requester if you want to make changes.'}
+            </span>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex items-center justify-between sm:flex-row flex-col">
@@ -286,7 +307,10 @@ function ApprovalStatusCard({
                     onClick={onApprove}
                     variant="outline"
                     className="w-full bg-emerald-800 hover:bg-emerald-700 text-white"
-                    disabled={currentUserApprover.didApprove === true}
+                    disabled={
+                      currentUserApprover.didApprove === true ||
+                      approval.expired
+                    }
                   >
                     {currentUserApprover.didApprove ? 'Approved' : 'Approve'}
                   </Button>
@@ -294,7 +318,10 @@ function ApprovalStatusCard({
                     onClick={onDeny}
                     variant="destructive"
                     className="w-full"
-                    disabled={currentUserApprover.didApprove === false}
+                    disabled={
+                      currentUserApprover.didApprove === false ||
+                      approval.expired
+                    }
                   >
                     {currentUserApprover.didApprove === false
                       ? 'Rejected'

@@ -259,6 +259,7 @@ export function ApprovalTable({
               <TableHead className="w-[calc(100%/24)]">Created</TableHead>
               <TableHead className="w-1/12">Due By</TableHead>
               <TableHead className="w-[calc(100%/24)]">Priority</TableHead>
+              <TableHead className="w-[calc(100%/24)]">Expired</TableHead>
               <TableHead className="w-[calc(100%/24)]">Status</TableHead>
             </TableRow>
           </TableHeader>
@@ -310,6 +311,9 @@ export function ApprovalTable({
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
                   {approval.status}
+                </TableCell>
+                <TableCell className="truncate max-w-[150px] py-0">
+                  {approval.expired ? 'Yes' : 'No'}
                 </TableCell>
               </TableRow>
             ))}

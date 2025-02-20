@@ -52,6 +52,7 @@ export interface Approval {
   due_date: string;
   date: Date;
   description: string;
+  expired: boolean;
   status: 'pending' | 'approved' | 'rejected';
   priority: 'high' | 'medium' | 'low';
   comments: Comment[];
