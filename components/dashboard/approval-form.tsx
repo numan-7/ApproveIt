@@ -318,7 +318,11 @@ export function ApprovalForm() {
         const approvalToEdit = approvals.find(
           (a) => a.id.toString() === editId.toString()
         );
-        if (approvalToEdit?.zoom_meeting && !didDeleteMeeting) {
+        if (
+          approvalToEdit?.zoom_meeting &&
+          approvalToEdit.zoom_meeting.meeting_id &&
+          !didDeleteMeeting
+        ) {
           setError('Failed to delete Zoom meeting');
           return;
         }

@@ -95,6 +95,7 @@ export async function POST(req: Request) {
         description,
         priority,
         due_date,
+        expired: false,
         status: 'pending',
         approvers: approvers || [],
         zoom_meeting: zoom_meeting || [],
@@ -102,8 +103,9 @@ export async function POST(req: Request) {
     ])
     .select();
 
-  if (error)
+  if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   const approvalId = data[0].id;
 

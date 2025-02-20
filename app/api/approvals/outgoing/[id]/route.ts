@@ -47,6 +47,7 @@ export async function PATCH(
     .update(approvalUpdates)
     .eq('id', id);
   if (updateError) {
+    console.error('Error updating approval', updateError);
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
@@ -86,6 +87,7 @@ export async function PATCH(
       deleteUTFiles(toDeleteKey);
 
       if (deleteError) {
+        console.error('Error deleting attachments', deleteError);
         return NextResponse.json(
           { error: deleteError.message },
           { status: 500 }
@@ -135,6 +137,7 @@ export async function PATCH(
     .single();
 
   if (fetchUpdatedError) {
+    console.error('Error fetching updated approval', fetchUpdatedError);
     return NextResponse.json(
       { error: fetchUpdatedError.message },
       { status: 500 }
