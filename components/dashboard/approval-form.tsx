@@ -51,12 +51,6 @@ export function ApprovalForm() {
     undefined
   );
   const [zoomDuration, setZoomDuration] = useState<number>(30);
-  const [approvalZoomMeeting, setApprovalZoomMeeting] = useState<{
-    join_url: string;
-    meeting_id: string;
-    start_time: string;
-    duration: number;
-  } | null>(null);
   const [isZoomConnected, setIsZoomConnected] = useState(false);
   const [loadingZoom, setLoadingZoom] = useState(false);
   const { createMeeting, updateMeeting, deleteMeeting } = useZoomMeeting();
@@ -279,7 +273,9 @@ export function ApprovalForm() {
       const approvalToEdit = approvals.find(
         (a) => a.id.toString() === editId.toString()
       );
-      if (approvalToEdit?.zoom_meeting) {
+
+      if (approvalToEdit && approvalToEdit?.zoom_meeting.meeting_id) {
+        console.log('approvalToEdit.zoom_meeting', approvalToEdit.zoom_meeting);
         didDeleteMeeting = await deleteMeeting(
           approvalToEdit.zoom_meeting.meeting_id
         );
@@ -342,7 +338,8 @@ export function ApprovalForm() {
         }
       }
       localStorage.removeItem('unsubmittedFiles');
-      router.push('/dashboard');
+      // router.push('/dashboard');
+      router.back();
     } catch (err: any) {
       setError(err.message);
     } finally {
