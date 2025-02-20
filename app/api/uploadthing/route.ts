@@ -10,15 +10,6 @@ export const { GET, POST } = createRouteHandler({
   router: ourFileRouter,
 });
 
-export const deleteUTFiles = async (files: string[]) => {
-  try {
-    await utapi.deleteFiles(files);
-  } catch (error) {
-    console.error('UTAPI: Error deleting files', error);
-    throw error;
-  }
-};
-
 export async function DELETE(req: Request) {
   const { fileKey } = await req.json();
   if (!fileKey) {
