@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Table,
   TableBody,
@@ -11,7 +11,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Pencil, Check, X, Search, Filter } from 'lucide-react';
+import {
+  Pencil,
+  Check,
+  X,
+  Search,
+  Filter,
+  ChevronUp,
+  ChevronDown,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
@@ -42,20 +50,75 @@ export function ApprovalTable({
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialSortField = searchParams.get('sortField') || 'date';
+  const initialSortDirection = searchParams.get('sortDirection') || 'asc';
+  const [sortField, setSortField] = useState(initialSortField);
+  const [sortDirection, setSortDirection] = useState(initialSortDirection);
+
   const { user } = useAuth();
 
   const filteredApprovals = approvals.filter((approval) => {
     const matchesSearch = approval.name
       .toLowerCase()
       .includes(search.toLowerCase());
-    const matchesPriority =
+    const matchesStatus =
       statusFilter === '' || approval.status === statusFilter;
-    return matchesSearch && matchesPriority;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Sorting logic: for fields like "date" and "due_date" convert to Date,
+  // for "approvers" sort by the number of approvers.
+  const sortedApprovals = [...filteredApprovals].sort((a, b) => {
+    let aValue: any = a[sortField as keyof Approval];
+    let bValue: any = b[sortField as keyof Approval];
+
+    if (sortField === 'approvers') {
+      aValue = a.approvers.length;
+      bValue = b.approvers.length;
+    }
+    if (sortField === 'date' || sortField === 'due_date') {
+      aValue = new Date(aValue);
+      bValue = new Date(bValue);
+      return sortDirection === 'asc'
+        ? aValue.getTime() - bValue.getTime()
+        : bValue.getTime() - aValue.getTime();
+    }
+    if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+      return sortDirection === 'asc'
+        ? aValue === bValue
+          ? 0
+          : aValue
+            ? -1
+            : 1
+        : aValue === bValue
+          ? 0
+          : aValue
+            ? 1
+            : -1;
+    }
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc'
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    }
+    return 0;
   });
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const displayedApprovals = filteredApprovals.slice(startIndex, endIndex);
+  const displayedApprovals = sortedApprovals.slice(startIndex, endIndex);
+
+  const handleSort = (field: string) => {
+    const newSortDirection =
+      field === sortField ? (sortDirection === 'asc' ? 'desc' : 'asc') : 'asc';
+    setSortField(field);
+    setSortDirection(newSortDirection);
+    router.push(`?sortField=${field}&sortDirection=${newSortDirection}`);
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -187,7 +250,9 @@ export function ApprovalTable({
 
         <div className="w-full md:min-w-[220px]">
           <div
-            className={`flex items-center space-x-2 ${selectedIds.length > 0 ? 'visible' : 'invisible'}`}
+            className={`flex items-center space-x-2 ${
+              selectedIds.length > 0 ? 'visible' : 'invisible'
+            }`}
           >
             {type === 'outgoing' && selectedIds.length === 1 && (
               <Button
@@ -252,15 +317,132 @@ export function ApprovalTable({
                   }
                 />
               </TableHead>
-              <TableHead className="w-1/6">Name</TableHead>
-              <TableHead className="w-1/6">Requester</TableHead>
-              <TableHead className="w-1/6">Description</TableHead>
-              <TableHead className="w-[calc(100%/20)]">Approvers #</TableHead>
-              <TableHead className="w-[calc(100%/24)]">Created</TableHead>
-              <TableHead className="w-1/12">Due By</TableHead>
-              <TableHead className="w-[calc(100%/24)]">Priority</TableHead>
-              <TableHead className="w-[calc(100%/24)]">Expired</TableHead>
-              <TableHead className="w-[calc(100%/24)]">Status</TableHead>
+              <TableHead className="w-1/6">
+                <button
+                  onClick={() => handleSort('name')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Name</span>
+                  {sortField === 'name' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
+              <TableHead className="w-1/6">
+                <button
+                  onClick={() => handleSort('requester')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Requester</span>
+                  {sortField === 'requester' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
+              <TableHead className="w-1/6">
+                <button
+                  onClick={() => handleSort('description')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Description</span>
+                  {sortField === 'description' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
+              <TableHead className="w-[calc(100%/20)]">
+                <button
+                  onClick={() => handleSort('approvers')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Approvers #</span>
+                  {sortField === 'approvers' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
+              <TableHead className="w-[calc(100%/24)]">
+                <button
+                  onClick={() => handleSort('date')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Created</span>
+                  {sortField === 'date' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
+              <TableHead className="w-1/12">
+                <button
+                  onClick={() => handleSort('due_date')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Due By</span>
+                  {sortField === 'due_date' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
+              <TableHead className="w-[calc(100%/24)]">
+                <button
+                  onClick={() => handleSort('priority')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Priority</span>
+                  {sortField === 'priority' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
+              <TableHead className="w-[calc(100%/24)]">
+                <button
+                  onClick={() => handleSort('expired')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Expired</span>
+                  {sortField === 'expired' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
+              <TableHead className="w-[calc(100%/24)]">
+                <button
+                  onClick={() => handleSort('status')}
+                  className="flex items-center gap-2"
+                >
+                  <span>Status</span>
+                  {sortField === 'status' &&
+                    (sortDirection === 'asc' ? (
+                      <ChevronUp size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ))}
+                </button>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -291,7 +473,6 @@ export function ApprovalTable({
                 <TableCell className="max-w-[150px] truncate overflow-hidden whitespace-nowrap text-ellipsis py-0">
                   {approval.description}
                 </TableCell>
-
                 <TableCell className="truncate max-w-[150px] py-0">
                   {approval.approvers.length}
                 </TableCell>
@@ -310,10 +491,10 @@ export function ApprovalTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.status}
+                  {approval.expired ? 'Yes' : 'No'}
                 </TableCell>
                 <TableCell className="truncate max-w-[150px] py-0">
-                  {approval.expired ? 'Yes' : 'No'}
+                  {approval.status}
                 </TableCell>
               </TableRow>
             ))}
