@@ -21,7 +21,7 @@ export function SummaryCards({
         <CardHeader>
           <CardTitle>My Requests</CardTitle>
           <CardDescription>
-            Pending approval requests you've sent out
+            Pending approval requests you have sent out
           </CardDescription>
         </CardHeader>
         <CardContent>
