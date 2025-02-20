@@ -29,7 +29,7 @@ export async function PATCH(
 
   const { data: existing, error: existingError } = await supabase
     .from('approvals')
-    .select('requester')
+    .select('requester, approvers')
     .eq('id', id)
     .single();
   if (existingError) {
@@ -144,18 +144,28 @@ export async function PATCH(
     );
   } else {
     // @ts-ignore
-    const newApprovers = updatedApproval.approvers.filter(
+    const existingEmails = new Set(existing.approvers.map((a: any) => a.email));
+    // @ts-ignore
+    const updatedEmails = new Set(
       // @ts-ignore
-      (approver) => !approvalUpdates.approvers.includes(approver)
+      updatedApproval.approvers.map((a: any) => a.email)
     );
 
-    await supabase.functions.invoke('invoke-approvers', {
-      body: {
-        approvalId: id,
-        requester: user.email,
-        approvers: newApprovers,
-      },
-    });
+    // Find approvers that exist in updatedApproval but NOT in existing
+    // @ts-ignore
+    const newApprovers = updatedApproval.approvers.filter(
+      (approver: any) => !existingEmails.has(approver.email)
+    );
+
+    if (newApprovers.length > 0) {
+      await supabase.functions.invoke('invite-approvers', {
+        body: {
+          approvalId: id,
+          requester: user.email,
+          approvers: newApprovers,
+        },
+      });
+    }
   }
 
   return NextResponse.json({ updatedApproval });
