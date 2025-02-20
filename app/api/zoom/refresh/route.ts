@@ -24,7 +24,7 @@ async function refreshZoomToken(refreshToken: string) {
   return await tokenResponse.json();
 }
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
+export async function POST() {
   const supabase = await createClientForServer();
   const {
     data: { user },
