@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClientForServer } from '@/utils/supabase/server';
 import { UTApi } from 'uploadthing/server';
 
-export const deleteUTFiles = async (files: string[]) => {
+const deleteUTFiles = async (files: string[]) => {
   const utapi = new UTApi();
   try {
     await utapi.deleteFiles(files);
