@@ -142,6 +142,20 @@ export async function PATCH(
       { error: fetchUpdatedError.message },
       { status: 500 }
     );
+  } else {
+    // @ts-ignore
+    const newApprovers = updatedApproval.approvers.filter(
+      // @ts-ignore
+      (approver) => !approvalUpdates.approvers.includes(approver)
+    );
+
+    await supabase.functions.invoke('invoke-approvers', {
+      body: {
+        approvalId: id,
+        requester: user.email,
+        approvers: newApprovers,
+      },
+    });
   }
 
   return NextResponse.json({ updatedApproval });

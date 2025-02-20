@@ -123,5 +123,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: attachError.message }, { status: 500 });
   }
 
+  await supabase.functions.invoke('invoke-approvers', {
+    body: {
+      requester: user.email,
+      approvers: approvers,
+    },
+  });
+
   return NextResponse.json(data);
 }
