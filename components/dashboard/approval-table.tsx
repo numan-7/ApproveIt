@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
 import { convertToLocalTime } from '@/utils/date';
+import { toast } from 'react-toastify';
 
 interface ApprovalTableProps {
   approvals: Approval[];
@@ -180,15 +181,21 @@ export function ApprovalTable({
     }
 
     if (confirm(confirmMessage)) {
-      if (action === 'approve' && onApprove) {
-        onApprove(selectedIds);
-      } else if (action === 'deny' && onDeny) {
-        onDeny(selectedIds);
-      } else if (action === 'delete' && onDelete) {
-        onDelete(selectedIds);
+      try {
+        if (action === 'approve' && onApprove) {
+          onApprove(selectedIds);
+        } else if (action === 'deny' && onDeny) {
+          onDeny(selectedIds);
+        } else if (action === 'delete' && onDelete) {
+          onDelete(selectedIds);
+        }
+      } catch (err) {
+        toast.error('An error occurred with the server. Please try again.');
+      } finally {
+        toast.success('Action completed successfully.');
+        setSelectedIds([]);
+        router.refresh();
       }
-      setSelectedIds([]);
-      location.reload();
     }
   };
 
@@ -205,13 +212,17 @@ export function ApprovalTable({
         (ap) => ap.email.toLowerCase() === user?.email.toLowerCase()
       );
 
-      if (approver && approval.status !== 'pending') {
+      if (approver && approval.expired === false) {
+        console.log('here');
         // @ts-ignore
         if (approver.didApprove === true) {
           hasApproved = true;
         } else {
           hasDenied = true;
         }
+      } else {
+        hasApproved = true;
+        hasDenied = true;
       }
     });
 
@@ -219,6 +230,8 @@ export function ApprovalTable({
   };
 
   const { hasApproved, hasDenied } = getUserApprovalStatus();
+
+  console.log(hasApproved, hasDenied);
 
   return (
     <div>

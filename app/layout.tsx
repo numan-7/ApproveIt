@@ -3,6 +3,7 @@ import { Playfair_Display, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ZoomProvider } from '@/context/ZoomContext';
+import { ToastContainer } from 'react-toastify';
 
 const playfair = Playfair_Display({
   subsets: ['latin'],
@@ -34,6 +35,17 @@ export default function RootLayout({
         <AuthProvider>
           <ZoomProvider>{children}</ZoomProvider>
         </AuthProvider>
+        <ToastContainer
+          className="font-dm"
+          position="bottom-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          pauseOnHover
+        />
       </body>
     </html>
   );

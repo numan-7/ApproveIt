@@ -19,6 +19,8 @@ import { twMerge } from 'tailwind-merge';
 import { convertToLocalTime } from '@/utils/date';
 import { UploadDropzone } from '@/utils/uploadthing/uploadthing';
 import { useZoomMeeting } from '@/hooks/useZoomMeeting';
+import { toast } from 'react-toastify';
+
 import { join } from 'path';
 
 type Approver = {
@@ -338,11 +340,16 @@ export function ApprovalForm() {
         }
       }
       localStorage.removeItem('unsubmittedFiles');
-      // router.push('/dashboard');
       router.back();
     } catch (err: any) {
       setError(err.message);
+      toast.error('Something went wrong on our end. Please try again later.');
     } finally {
+      if (editId) {
+        toast.success('Approval request updated successfully.');
+      } else {
+        toast.success('Approval request created successfully.');
+      }
       setIsSubmitting(false);
     }
   };

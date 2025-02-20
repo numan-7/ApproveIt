@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'react-toastify';
 import {
   Paperclip,
   Download,
@@ -55,13 +56,29 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   };
 
   const handleApproveApproval = async () => {
-    await approveApproval(approval.id);
-    window.location.reload();
+    try {
+      await approveApproval(approval.id);
+    } catch (error) {
+      toast.error(
+        'Error approving approval, something is wrong with the server.'
+      );
+    } finally {
+      router.back();
+      toast.success('Approval has been approved successfully.');
+    }
   };
 
   const handleDenyApproval = async () => {
-    await denyApproval(approval.id);
-    window.location.reload();
+    try {
+      await denyApproval(approval.id);
+    } catch (err) {
+      toast.error(
+        'Error denying approval, something is wrong with the server.'
+      );
+    } finally {
+      router.back();
+      toast.success('Approval has been denied successfully.');
+    }
   };
 
   return (
