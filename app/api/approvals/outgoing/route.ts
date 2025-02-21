@@ -90,7 +90,7 @@ export async function POST(req: Request) {
     .from('approvals')
     .insert([
       {
-        name: user?.user_metadata?.full_name || name,
+        name: name,
         requester: user.email,
         description,
         priority,
