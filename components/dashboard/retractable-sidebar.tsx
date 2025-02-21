@@ -19,6 +19,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export function RetractableSidebar() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -117,10 +118,12 @@ export function RetractableSidebar() {
               !isExpanded && 'justify-center'
             )}
           >
-            <img
+            <Image
               src="/logo.svg"
               alt="ApproveIt"
-              className="h-8 w-8 object-contain"
+              width={24}
+              height={24}
+              objectFit="contain"
             />
           </div>
         </Link>
