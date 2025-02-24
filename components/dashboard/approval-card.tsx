@@ -50,8 +50,16 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
   const handleDeleteApproval = () => {
     if (approval.requester !== user?.email) return;
     if (confirm('Are you sure you want to delete this approval?')) {
-      deleteApproval(approval.id);
-      router.push('/dashboard');
+      try {
+        deleteApproval(approval.id);
+      } catch (err) {
+        toast.error(
+          'Error deleting approval, something is wrong with the server.'
+        );
+      } finally {
+        toast.success('Approval has been deleted successfully.');
+        router.push('/dashboard');
+      }
     }
   };
 
@@ -118,7 +126,7 @@ function ApprovalDetailsCard({
       <CardHeader>
         <CardTitle className="flex items-center">
           <FileText className="h-5 w-5 mr-2" />
-          Approval Details
+          {approval.name}
         </CardTitle>
         {approval.expired && (
           <div className="flex items-center justify-between p-3 font-dm bg-red-50 rounded-lg">
