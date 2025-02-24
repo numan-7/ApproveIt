@@ -230,9 +230,11 @@ export function RetractableSidebar() {
               !isExpanded && 'justify-center'
             )}
           >
-            <img
+            <Image
               src={user?.user_metadata?.picture || '/sidebar_background.webp'}
               alt="User Avatar"
+              width={32}
+              height={32}
               className={cn('h-8 w-8 rounded-sm mr-2', !isExpanded && 'mr-0')}
             />
             {isExpanded && (
