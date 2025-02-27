@@ -249,10 +249,10 @@ export function ApprovalForm() {
           zoomMeeting = {
             ...zoomMeeting,
             start_time: zoomStartTime.toISOString(),
+            // @ts-ignore
             meeting_id: data.meeting_id,
             join_url: approvalToEdit.zoom_meeting.join_url,
           };
-          console.log(zoomMeeting);
         } else {
           // Create a new meeting since none exists
           zoomMeeting = await createMeeting({
