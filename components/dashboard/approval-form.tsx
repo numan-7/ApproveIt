@@ -237,15 +237,22 @@ export function ApprovalForm() {
             duration: zoomDuration,
             invitees: approvers.map((a) => a.email),
           };
-          await updateMeeting(
+          const data = await updateMeeting(
             approvalToEdit.zoom_meeting.meeting_id,
             zoomMeeting
           );
+          console.log(data);
+          // get rid of meetingStartTime
+          const { meetingStartTime, ...rest } = zoomMeeting;
+          zoomMeeting = rest;
           // Preserve the original join_url
           zoomMeeting = {
             ...zoomMeeting,
+            start_time: zoomStartTime.toISOString(),
+            meeting_id: data.meeting_id,
             join_url: approvalToEdit.zoom_meeting.join_url,
           };
+          console.log(zoomMeeting);
         } else {
           // Create a new meeting since none exists
           zoomMeeting = await createMeeting({
