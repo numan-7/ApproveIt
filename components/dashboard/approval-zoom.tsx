@@ -27,7 +27,9 @@ export const ApprovalZoom = ({ zoom }: { zoom: ZoomMeeting }) => {
             <Clock className="h-4 w-4 text-gray-500" />
             <span className="text-sm font-medium">Start Time:</span>
           </div>
-          <span className="text-sm">{convertToLocalTime(zoom.start_time)}</span>
+          <span className="text-sm">
+            {convertToLocalTime(zoom.start_time || zoom.meetingStartTime)}
+          </span>
         </div>
 
         <div className="flex items-center justify-between">

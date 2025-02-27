@@ -1,4 +1,5 @@
 export interface ZoomMeeting {
+  meetingStartTime: string;
   join_url: string;
   meeting_id: string;
   start_time: string;

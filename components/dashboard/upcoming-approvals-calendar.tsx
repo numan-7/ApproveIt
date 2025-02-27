@@ -65,10 +65,14 @@ export function UpcomingApprovalsCalendar({
     return approvals.reduce<DayEvent[]>((acc, approval) => {
       const dueDate = new Date(approval.due_date);
       const meetingDate =
-        approval.zoom_meeting &&
-        approval.zoom_meeting.meeting_id &&
-        approval.zoom_meeting.start_time
-          ? new Date(approval.zoom_meeting.start_time)
+        (approval.zoom_meeting &&
+          approval.zoom_meeting.meeting_id &&
+          approval.zoom_meeting.start_time) ||
+        approval.zoom_meeting.meetingStartTime
+          ? new Date(
+              approval.zoom_meeting.meetingStartTime ||
+                approval.zoom_meeting.start_time
+            )
           : null;
       const isDue =
         dueDate.getDate() === day &&
@@ -120,6 +124,8 @@ export function UpcomingApprovalsCalendar({
     .sort(
       (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
     );
+
+  console.log(approvalsWithinWeek);
 
   return (
     <Card className="h-full max-h-[550px] font-dm overflow-y-scroll scrollbar scrollbar-hidden scrollbar-hover rounded-md">
@@ -271,12 +277,13 @@ export function UpcomingApprovalsCalendar({
                             {convertToLocalTime(approval.due_date)}
                           </div>
                           {approval.zoom_meeting &&
-                            approval.zoom_meeting.meeting_id && (
+                            approval.zoom_meeting.join_url && (
                               <div className="flex items-center gap-1 text-blue-500">
                                 <VideoIcon className="h-3 w-3" />
                                 <span className="text-xs ">
                                   {convertToLocalTime(
-                                    approval.zoom_meeting.start_time
+                                    approval.zoom_meeting.start_time ||
+                                      approval.zoom_meeting.meetingStartTime
                                   )}
                                 </span>
                               </div>

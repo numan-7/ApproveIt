@@ -60,8 +60,6 @@ export default function Dashboard() {
 
   if (isLoading) return <SpinnerLoader />;
 
-  console.log(approvalStats.approvals);
-
   return (
     <div className="p-4 space-y-3 min-h-screen md:flex md:flex-col">
       <h1 className="text-3xl font-bold">Dashboard</h1>
