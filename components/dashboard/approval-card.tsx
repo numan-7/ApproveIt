@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -20,12 +21,15 @@ import {
   Users,
   FileText,
   Calendar,
+  Eye,
 } from 'lucide-react';
 import { useMyApprovals } from '@/hooks/useMyApprovals';
 import { usePendingApprovals } from '@/hooks/usePendingApprovals';
 import { useAuth } from '@/context/AuthContext';
 import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import type { Approval } from '@/types/approval';
+import '@cyntler/react-doc-viewer/dist/index.css';
+import DocViewer, { DocViewerRenderers } from '@cyntler/react-doc-viewer';
 
 interface ApprovalCardProps {
   approval: Approval;
@@ -91,10 +95,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
   return (
     <div className="space-y-4">
-      <ApprovalDetailsCard
-        approval={approval}
-        currentUserApprover={currentUserApprover}
-      />
+      <ApprovalDetailsCard approval={approval} user={user} />
       <ApprovalStatusCard
         approval={approval}
         user={user}
@@ -110,140 +111,220 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
 interface ApprovalDetailsCardProps {
   approval: Approval;
-  currentUserApprover?: {
+  user?: {
     email: string;
-    didApprove: boolean | null;
     name: string;
   };
 }
 
-function ApprovalDetailsCard({
-  approval,
-  currentUserApprover,
-}: ApprovalDetailsCardProps) {
+function ApprovalDetailsCard({ approval, user }: ApprovalDetailsCardProps) {
+  // State to track the file selected for preview
+  const [selectedFile, setSelectedFile] = useState<{
+    name: string;
+    size: string;
+    url: string;
+  } | null>(null);
+
+  // List of allowed file extensions for previewing with DocViewer
+  const supportedExtensions = [
+    'bmp',
+    'csv',
+    'odt',
+    'doc',
+    'docx',
+    'gif',
+    'htm',
+    'html',
+    'jpg',
+    'jpeg',
+    'pdf',
+    'png',
+    'ppt',
+    'pptx',
+    'tiff',
+    'txt',
+    'xls',
+    'xlsx',
+    'mp4',
+    'webp',
+  ];
+
+  // Handler for the view button
+  const handleViewFile = (file: {
+    name: string;
+    size: string;
+    url: string;
+  }) => {
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    if (extension && supportedExtensions.includes(extension)) {
+      setSelectedFile(file);
+    } else {
+      toast.info('This file type is not supported for preview.');
+    }
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <FileText className="h-5 w-5 mr-2" />
-          {approval.name}
-        </CardTitle>
-        {approval.expired && (
-          <div className="flex items-center justify-between p-3 font-dm bg-red-50 rounded-lg">
-            <span className="text-red-500 font-semibold">
-              {currentUserApprover &&
-              currentUserApprover.email === approval.requester
-                ? 'Approval expired! You are still able to edit or delete this approval.'
-                : 'Approval has expired! Please contact the requester if you want to make changes.'}
-            </span>
-          </div>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex items-center justify-between sm:flex-row flex-col">
-          <div className="flex flex-col space-y-1">
-            <div className="flex items-left flex-col">
-              <span className="text-sm text-gray-500 text-center sm:text-left">
-                Requested By:
-              </span>
-              <span className="font-medium text-gray-800">
-                {approval.requester}
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <FileText className="h-5 w-5 mr-2" />
+            {approval.name}
+          </CardTitle>
+          {approval.expired && (
+            <div className="flex items-center justify-between p-3 font-dm bg-red-50 rounded-lg">
+              <span className="text-red-500 font-semibold">
+                {user && user.email === approval.requester
+                  ? 'Approval expired! You are still able to edit or delete this approval.'
+                  : 'Approval has expired! Please contact the requester if you want to make changes.'}
               </span>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Badge
-              variant={approval.priority === 'high' ? 'destructive' : 'outline'}
-              className="text-sm font-semibold"
-            >
-              {approval.priority.toUpperCase()} PRIORITY
-            </Badge>
-            <Badge
-              variant="outline"
-              className="text-sm font-semibold text-center flex items-center justify-center"
-            >
-              {approval.status.toUpperCase()}
-            </Badge>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-5 w-5 text-gray-500" />
-            <span className="font-semibold">Due By:</span>
-          </div>
-          <span className="text-sm">
-            {new Date(approval.due_date).toLocaleString(undefined, {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
-        </div>
-
-        <Separator />
-
-        <div>
-          <h3 className="font-semibold mb-2">Description</h3>
-          {approval.description ? (
-            <p className="text-gray-700">{approval.description}</p>
-          ) : (
-            <p className="text-sm text-gray-500">No description available.</p>
           )}
-        </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between sm:flex-row flex-col">
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-left flex-col">
+                <span className="text-sm text-gray-500 text-center sm:text-left">
+                  Requested By:
+                </span>
+                <span className="font-medium text-gray-800">
+                  {approval.requester}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Badge
+                variant={
+                  approval.priority === 'high' ? 'destructive' : 'outline'
+                }
+                className="text-sm font-semibold"
+              >
+                {approval.priority.toUpperCase()} PRIORITY
+              </Badge>
+              <Badge
+                variant="outline"
+                className="text-sm font-semibold text-center flex items-center justify-center"
+              >
+                {approval.status.toUpperCase()}
+              </Badge>
+            </div>
+          </div>
 
-        <Separator />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Calendar className="h-5 w-5 text-gray-500" />
+              <span className="font-semibold">Due By:</span>
+            </div>
+            <span className="text-sm">
+              {new Date(approval.due_date).toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          </div>
 
-        <div>
-          <h3 className="font-semibold mb-2">Attachments</h3>
-          <div className="space-y-2">
-            {approval.attachments && approval.attachments.length > 0 ? (
-              approval.attachments.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Paperclip className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <p className="font-medium">{file.name}</p>
-                      <p className="text-sm text-gray-500">{file.size}</p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch(file.url);
-                        const blob = await response.blob();
-                        const url = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.setAttribute('download', file.name);
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        window.URL.revokeObjectURL(url);
-                      } catch (error) {
-                        console.error('Error downloading file:', error);
-                      }
-                    }}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
-              ))
+          <Separator />
+
+          <div>
+            <h3 className="font-semibold mb-2">Description</h3>
+            {approval.description ? (
+              <p className="text-gray-700">{approval.description}</p>
             ) : (
-              <p className="text-sm text-gray-500">No attachments available.</p>
+              <p className="text-sm text-gray-500">No description available.</p>
             )}
           </div>
+
+          <Separator />
+
+          <div>
+            <h3 className="font-semibold mb-2">Attachments</h3>
+            <div className="space-y-2">
+              {approval.attachments && approval.attachments.length > 0 ? (
+                approval.attachments.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Paperclip className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="font-medium">{file.name}</p>
+                        <p className="text-sm text-gray-500">{file.size}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewFile(file)}
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(file.url);
+                            const blob = await response.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.setAttribute('download', file.name);
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            window.URL.revokeObjectURL(url);
+                          } catch (error) {
+                            console.error('Error downloading file:', error);
+                          }
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">
+                  No attachments available.
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {selectedFile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ease-in-out">
+          <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-md shadow-2xl overflow-hidden transform transition-transform duration-300 ease-in-out scale-100">
+            <button
+              onClick={() => setSelectedFile(null)}
+              className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gray-600 hover:bg-gray-500 text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="h-[80vh] w-full overflow-auto">
+              <DocViewer
+                documents={[{ uri: selectedFile.url }]}
+                pluginRenderers={DocViewerRenderers}
+                config={{
+                  header: {
+                    disableFileName: true,
+                    disableHeader: false,
+                  },
+                }}
+                style={{ height: '100%' }}
+              />
+            </div>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 }
 
