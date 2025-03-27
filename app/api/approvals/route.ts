@@ -40,14 +40,13 @@ export async function GET(req: Request) {
     `
     )
     .eq('requester', user.email)
-    .is('expired', false)
     .order('date', { ascending: true });
 
   const incomingApprovalslength = incoming.filter(
-    (incoming: any) => incoming.status === 'pending'
+    (incoming: any) => incoming.status === 'pending' && !incoming.expired
   ).length;
   const outgoingApprovalslength = outgoing?.filter(
-    (outgoing: any) => outgoing.status === 'pending'
+    (outgoing: any) => outgoing.status === 'pending' && !outgoing.expired
   ).length;
 
   let allEvents: {
