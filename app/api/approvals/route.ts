@@ -40,6 +40,7 @@ export async function GET(req: Request) {
     `
     )
     .eq('requester', user.email)
+    .is('expired', false)
     .order('date', { ascending: true });
 
   const incomingApprovalslength = incoming.filter(
