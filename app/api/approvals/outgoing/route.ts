@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClientForServer } from '@/utils/supabase/server';
+import {
+  generateEmbedding,
+  generateApprovalEmbedding,
+} from '@/utils/embedding/embed';
 
 const MAX_ATTACHMENTS = 5;
 const MAX_FILE_SIZE = 16 * 1024 * 1024;
@@ -64,6 +68,8 @@ export async function POST(req: Request) {
     zoom_meeting,
   } = body;
 
+  const vector = await generateApprovalEmbedding(body);
+
   if (attachments) {
     if (!Array.isArray(attachments))
       return NextResponse.json(
@@ -100,6 +106,7 @@ export async function POST(req: Request) {
         status: 'pending',
         approvers: approvers || [],
         zoom_meeting: zoom_meeting || [],
+        embedding: vector,
       },
     ])
     .select();

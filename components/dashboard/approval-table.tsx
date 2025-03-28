@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -20,15 +20,17 @@ import {
   ChevronUp,
   ChevronDown,
   CalendarClock,
+  Sparkles,
+  RotateCcw,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import type { Approval } from '@/types/approval';
-import { convertToLocalTime } from '@/utils/date';
 import { toast } from 'react-toastify';
 import { SpinnerLoader } from '../ui/spinner-loader';
-import { Suspense } from 'react';
+import { useMyEmbeddings } from '@/hooks/useMyEmbeddings';
+import BeatLoader from 'react-spinners/BeatLoader';
 
 interface ApprovalTableProps {
   approvals: Approval[];
@@ -56,6 +58,10 @@ export function ApprovalTable({
   const [expiredFilter, setExpiredFilter] =
     useState<ExpiredFilterState>('not_expired');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [naturalLanguageSearch, setNaturalLanguageSearch] = useState('');
+  const [embeddingSearchResults, setEmbeddingSearchResults] = useState<
+    Approval[] | null
+  >(null);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,71 +69,84 @@ export function ApprovalTable({
   const initialSortDirection = searchParams.get('sortDirection') || 'asc';
   const [sortField, setSortField] = useState(initialSortField);
   const [sortDirection, setSortDirection] = useState(initialSortDirection);
-
+  const { fetchEmbeddings, loading } = useMyEmbeddings();
   const { user } = useAuth();
 
-  const filteredApprovals = approvals.filter((approval) => {
-    const matchesSearch = approval.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesStatus =
-      statusFilter === '' || approval.status === statusFilter;
+  const baseList = useMemo(() => {
+    const listToFilter = embeddingSearchResults ?? approvals;
 
-    let matchesExpired: boolean;
-    if (expiredFilter === 'not_expired') {
-      matchesExpired = approval.expired === false;
-    } else if (expiredFilter === 'expired') {
-      matchesExpired = approval.expired === true;
-    } else {
-      matchesExpired = true;
-    }
+    const filtered = listToFilter.filter((approval) => {
+      const matchesSearch =
+        embeddingSearchResults !== null
+          ? true
+          : approval.name.toLowerCase().includes(search.toLowerCase());
 
-    return matchesSearch && matchesStatus && matchesExpired;
-  });
+      const matchesStatus =
+        statusFilter === '' || approval.status === statusFilter;
 
-  // Sorting logic (remains the same)
-  const sortedApprovals = [...filteredApprovals].sort((a, b) => {
-    let aValue: any = a[sortField as keyof Approval];
-    let bValue: any = b[sortField as keyof Approval];
+      let matchesExpired: boolean;
+      if (expiredFilter === 'not_expired') {
+        matchesExpired = approval.expired === false;
+      } else if (expiredFilter === 'expired') {
+        matchesExpired = approval.expired === true;
+      } else {
+        matchesExpired = true;
+      }
 
-    if (sortField === 'approvers') {
-      aValue = a.approvers.length;
-      bValue = b.approvers.length;
-    }
-    if (sortField === 'date' || sortField === 'due_date') {
-      aValue = new Date(aValue);
-      bValue = new Date(bValue);
-      return sortDirection === 'asc'
-        ? aValue.getTime() - bValue.getTime()
-        : bValue.getTime() - aValue.getTime();
-    }
-    if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
-      return sortDirection === 'asc'
-        ? aValue === bValue
-          ? 0
-          : aValue
-            ? -1
-            : 1
-        : aValue === bValue
-          ? 0
-          : aValue
-            ? 1
-            : -1;
-    }
-    if (typeof aValue === 'number' && typeof bValue === 'number') {
-      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
-    }
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sortDirection === 'asc'
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
-    }
-    return 0;
-  });
+      return matchesSearch && matchesStatus && matchesExpired;
+    });
+
+    return [...filtered].sort((a, b) => {
+      let aValue: any = a[sortField as keyof Approval];
+      let bValue: any = b[sortField as keyof Approval];
+
+      if (sortField === 'approvers') {
+        aValue = a.approvers.length;
+        bValue = b.approvers.length;
+      }
+      if (sortField === 'date' || sortField === 'due_date') {
+        aValue = aValue ? new Date(aValue).getTime() : 0;
+        bValue = bValue ? new Date(bValue).getTime() : 0;
+        if (!aValue) return sortDirection === 'asc' ? 1 : -1;
+        if (!bValue) return sortDirection === 'asc' ? -1 : 1;
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+        return sortDirection === 'asc'
+          ? aValue === bValue
+            ? 0
+            : aValue
+              ? -1
+              : 1
+          : aValue === bValue
+            ? 0
+            : aValue
+              ? 1
+              : -1;
+      }
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+      }
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortDirection === 'asc'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
+      return 0;
+    });
+  }, [
+    embeddingSearchResults,
+    approvals,
+    search,
+    statusFilter,
+    expiredFilter,
+    sortField,
+    sortDirection,
+  ]);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const displayedApprovals = sortedApprovals.slice(startIndex, endIndex);
+  const displayedApprovals = baseList.slice(startIndex, endIndex);
 
   const handleSort = (field: string) => {
     const newSortDirection =
@@ -137,20 +156,7 @@ export function ApprovalTable({
     const currentParams = new URLSearchParams(searchParams.toString());
     currentParams.set('sortField', field);
     currentParams.set('sortDirection', newSortDirection);
-    router.push(`?${currentParams.toString()}`);
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'low':
-        return 'bg-green-100 text-green-800 border-green-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+    router.replace(`?${currentParams.toString()}`, { scroll: false });
   };
 
   const toggleSelectOne = (id: number) => {
@@ -180,7 +186,6 @@ export function ApprovalTable({
         router.push(`/dashboard/approvals/create?edit=${approvalToEdit.id}`);
       } else {
         toast.info('Only the requester can edit an outgoing approval.');
-        console.log('Approval not editable by current user or not found.');
       }
     }
   };
@@ -213,14 +218,17 @@ export function ApprovalTable({
           onDelete(selectedIds);
           actionSuccessful = true;
         } else {
-          console.warn(`Handler for action "${action}" is not provided.`);
           toast.warn(`Action "${action}" could not be performed.`);
         }
 
         if (actionSuccessful) {
           toast.success(`Successfully ${action}d ${count} approval${plural}.`);
           setSelectedIds([]);
-          router.refresh();
+          if (embeddingSearchResults) {
+            setEmbeddingSearchResults(
+              embeddingSearchResults.filter((a) => !selectedIds.includes(a.id))
+            );
+          }
         }
       } catch (err) {
         console.error(`Error during action ${action}:`, err);
@@ -228,6 +236,81 @@ export function ApprovalTable({
           `An error occurred while trying to ${action} the approval${plural}. Please try again.`
         );
       }
+    }
+  };
+
+  const handleNaturalLanguageSearch = async () => {
+    const query = naturalLanguageSearch.trim();
+    if (!query) {
+      toast.info('Please enter a query to search.');
+      return;
+    }
+
+    try {
+      toast.info(`Processing query: "${query}"...`);
+
+      if (!approvals.length) {
+        toast.error('No approvals found to process the query.');
+        return;
+      }
+
+      let type = 'incoming';
+      if (
+        approvals.length > 0 &&
+        approvals.some((a) => a.requester === user?.email)
+      ) {
+        type = 'outgoing';
+      }
+
+      const payload = { query: query, type: type };
+      const results = await fetchEmbeddings(payload);
+
+      if (!results || results.length === 0) {
+        setEmbeddingSearchResults([]);
+        toast.success('No matching approvals found for your query.');
+        return;
+      }
+
+      const matchedIds = new Set(results.map((r: { id: number }) => r.id));
+      const matchedApprovals = approvals
+        .filter((approval) => matchedIds.has(approval.id))
+        .map((approval) => {
+          const match = results.find(
+            (r: { id: number }) => r.id === approval.id
+          );
+          return {
+            ...approval,
+            similarity_score: match?.similarity_score ?? 0,
+          };
+        })
+        .sort((a, b) => b.similarity_score - a.similarity_score);
+
+      console.log('matchedApprovals:', results);
+
+      setEmbeddingSearchResults(matchedApprovals);
+      toast.success('Query processed successfully.');
+    } catch (error) {
+      toast.error('Failed to process natural language query.');
+      setEmbeddingSearchResults(null);
+    }
+  };
+
+  const handleResetNaturalLanguageSearch = () => {
+    setNaturalLanguageSearch('');
+    setEmbeddingSearchResults(null);
+    setSelectedIds([]);
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -240,35 +323,27 @@ export function ApprovalTable({
     }
 
     selectedIds.forEach((id) => {
-      const approval = approvals.find((a) => a.id === id);
-      // If any selected approval is missing, expired, or user is not an approver, disable actions
-      if (!approval || approval.expired) {
+      const approval = baseList.find((a) => a.id === id);
+      if (!approval || approval.expired || approval.status !== 'pending') {
         canApprove = false;
         canDeny = false;
-        return; // No need to check further for this ID if expired or missing
+        return;
       }
 
       const approver = approval.approvers.find(
-        // @ts-ignore
         (ap: { email: string; didApprove: boolean | null }) =>
           ap.email.toLowerCase() === user?.email?.toLowerCase()
       );
 
-      // If user is not listed as an approver for *any* selected item, disable actions
       if (!approver) {
         canApprove = false;
         canDeny = false;
         return;
       }
 
-      // If user has already approved any selected item, disable Approve button
-      // @ts-ignore
       if (approver.didApprove === true) {
         canApprove = false;
-      }
-      // If user has already denied any selected item (didApprove is false), disable Deny button
-      // @ts-ignore
-      else if (approver.didApprove === false) {
+      } else if (approver.didApprove === false) {
         canDeny = false;
       }
     });
@@ -281,104 +356,153 @@ export function ApprovalTable({
   return (
     <Suspense fallback={<SpinnerLoader />}>
       <div>
-        <div className="flex flex-col md:flex-row justify-start items-center gap-2 mb-4 flex-wrap">
-          {' '}
-          {/* Search Input */}
+        <div className="flex items-center mb-2">
+          <div className="relative flex-grow">
+            <Sparkles
+              className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              value={naturalLanguageSearch}
+              onChange={(e) => setNaturalLanguageSearch(e.target.value)}
+              placeholder="Ask about approvals (e.g., 'vaccinate the cat...')"
+              className={`pl-8 pr-2 py-1 h-8 border border-gray-300 text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500 rounded-l-md rounded-r-none`}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleNaturalLanguageSearch();
+                }
+              }}
+            />
+          </div>
+          <Button
+            onClick={handleNaturalLanguageSearch}
+            size="sm"
+            variant="outline"
+            disabled={loading}
+            className={`px-3 border-gray-300 min-w-24 ${
+              embeddingSearchResults !== null
+                ? 'rounded-none border-l-0'
+                : 'rounded-l-none border-l-0 rounded-r-md'
+            }`}
+          >
+            {loading ? <BeatLoader size={10} /> : 'Search'}
+          </Button>
+          {embeddingSearchResults !== null && (
+            <Button
+              onClick={handleResetNaturalLanguageSearch}
+              size="sm"
+              variant="outline"
+              className="px-2 py-1 border-gray-300 border-l-0 rounded-l-none rounded-r-md text-gray-600 hover:text-gray-800"
+              title="Reset Search"
+            >
+              <RotateCcw size={16} />
+            </Button>
+          )}
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-start items-center gap-2 mb-2 flex-wrap">
           <div className="relative w-full md:w-auto md:flex-grow lg:flex-grow-0 lg:w-72">
-            {' '}
-            {/* Adjusted width */}
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4" />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search Approvals By Name..."
-              className="pl-8 pr-2 py-1 border border-gray-300 rounded-md text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="Filter by Name..."
+              className="pl-8 pr-2 py-1 h-8 border border-gray-300 rounded-md text-sm w-full focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              disabled={embeddingSearchResults !== null}
             />
           </div>
-          {/* Status Filter */}
           <div className="relative inline-block w-full md:w-auto">
             <Filter className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-gray-300 rounded-md py-1 text-sm pl-8 pr-6 appearance-none cursor-pointer hover:bg-gray-50 w-full md:w-auto focus:outline-none focus:ring-1 focus:ring-blue-500" // Added focus style
+              className="border border-gray-300 rounded-md py-1 h-8 text-sm pl-8 pr-6 appearance-none cursor-pointer hover:bg-gray-50 w-full md:w-auto focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">All Status</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
               <option value="rejected">Rejected</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />{' '}
+            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
           </div>
           <div className="relative inline-block w-full md:w-auto">
-            <CalendarClock className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />{' '}
+            <CalendarClock className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
             <select
               value={expiredFilter}
               onChange={(e) =>
                 setExpiredFilter(e.target.value as ExpiredFilterState)
               }
-              className="border border-gray-300 rounded-md py-1 text-sm pl-8 pr-6 appearance-none cursor-pointer hover:bg-gray-50 w-full md:w-auto focus:outline-none focus:ring-1 focus:ring-blue-500" // Added focus style
+              className="border border-gray-300 rounded-md py-1 h-8 text-sm pl-8 pr-6 appearance-none cursor-pointer hover:bg-gray-50 w-full md:w-auto focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="not_expired">Not Expired</option>
               <option value="expired">Expired Only</option>
               <option value="all">Show All (Incl. Expired)</option>
             </select>
-            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />{' '}
+            <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
           </div>
           <div className="w-full md:w-auto md:ml-auto">
-            {' '}
             <div
               className={`flex items-center space-x-2 justify-start md:justify-end ${
                 selectedIds.length > 0 ? 'visible' : 'invisible'
               }`}
             >
-              {/* Edit Button */}
               {type === 'outgoing' && selectedIds.length === 1 && (
                 <Button
                   onClick={handleEdit}
                   size="sm"
                   variant="outline"
-                  className="py-1 px-2 text-sm border border-gray-300 rounded-md flex items-center gap-1 hover:bg-gray-100" // Adjusted style
+                  className="py-1 px-2 text-sm"
+                  disabled={
+                    !approvals.find(
+                      (a) =>
+                        a.id === selectedIds[0] && a.requester === user?.email
+                    )
+                  }
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil className="w-4 h-4 mr-1" />
                   Edit
                 </Button>
               )}
-              {/* Approve/Deny Buttons */}
               {type === 'incoming' && selectedIds.length > 0 && (
                 <>
                   <Button
                     onClick={() => handleAction('approve')}
                     size="sm"
                     variant="outline"
-                    className="py-1 px-2 text-sm border border-emerald-600 rounded-md flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed" // Adjusted style
+                    className="py-1 px-2 text-sm border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={!canApprove}
                   >
-                    <Check className="w-4 h-4" />
+                    <Check className="w-4 h-4 mr-1" />
                     Approve
                   </Button>
                   <Button
                     onClick={() => handleAction('deny')}
                     size="sm"
                     variant="outline"
-                    className="py-1 px-2 text-sm border border-red-600 rounded-md flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-800 disabled:opacity-50 disabled:cursor-not-allowed" // Adjusted style
+                    className="py-1 px-2 text-sm border-red-600 bg-red-50 hover:bg-red-100 text-red-800 disabled:opacity-50 disabled:cursor-not-allowed"
                     disabled={!canDeny}
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-4 h-4 mr-1" />
                     Deny
                   </Button>
                 </>
               )}
-              {/* Delete Button */}
               {type === 'outgoing' && selectedIds.length > 0 && (
                 <Button
                   onClick={() => handleAction('delete')}
                   size="sm"
                   variant="destructive"
-                  className="py-1 px-2 text-sm rounded-md flex items-center gap-1 disabled:opacity-50"
+                  className="py-1 px-2 text-sm disabled:opacity-50"
+                  disabled={selectedIds.some(
+                    (id) =>
+                      !approvals.find(
+                        (a) => a.id === id && a.requester === user?.email
+                      )
+                  )}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4 mr-1" />
                   Delete
                 </Button>
               )}
@@ -386,34 +510,28 @@ export function ApprovalTable({
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto border rounded-md">
-          {' '}
+        <div className="overflow-x-auto border rounded-md shadow-sm">
           <Table className="min-w-full divide-y divide-gray-200">
-            {' '}
             <TableHeader className="bg-gray-50">
-              {' '}
               <TableRow>
                 <TableHead className="px-3 py-2 w-10">
-                  {' '}
                   <input
                     type="checkbox"
                     onChange={toggleSelectAll}
                     checked={
-                      displayedApprovals.length > 0 && // Only check if there are items to check
+                      displayedApprovals.length > 0 &&
                       displayedApprovals.every((a) =>
                         selectedIds.includes(a.id)
                       )
                     }
-                    className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out rounded"
+                    className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out rounded border-gray-300 focus:ring-blue-500"
                     aria-label="Select all items on this page"
                   />
                 </TableHead>
-                {/* Name */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                   <button
                     onClick={() => handleSort('name')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span>Name</span>
                     {sortField === 'name' &&
@@ -424,11 +542,10 @@ export function ApprovalTable({
                       ))}
                   </button>
                 </TableHead>
-                {/* Requester */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6">
                   <button
                     onClick={() => handleSort('requester')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span>Requester</span>
                     {sortField === 'requester' &&
@@ -439,13 +556,10 @@ export function ApprovalTable({
                       ))}
                   </button>
                 </TableHead>
-                {/* Description */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/5">
-                  {' '}
-                  {/* Adjusted width */}
                   <button
                     onClick={() => handleSort('description')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span>Description</span>
                     {sortField === 'description' &&
@@ -456,12 +570,10 @@ export function ApprovalTable({
                       ))}
                   </button>
                 </TableHead>
-                {/* Approvers # */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[80px]">
-                  {' '}
                   <button
                     onClick={() => handleSort('approvers')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span># Appr</span>
                     {sortField === 'approvers' &&
@@ -472,12 +584,10 @@ export function ApprovalTable({
                       ))}
                   </button>
                 </TableHead>
-                {/* Created */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[100px]">
-                  {' '}
                   <button
                     onClick={() => handleSort('date')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span>Created</span>
                     {sortField === 'date' &&
@@ -488,12 +598,10 @@ export function ApprovalTable({
                       ))}
                   </button>
                 </TableHead>
-                {/* Due By */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[100px]">
-                  {' '}
                   <button
                     onClick={() => handleSort('due_date')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span>Due By</span>
                     {sortField === 'due_date' &&
@@ -504,12 +612,10 @@ export function ApprovalTable({
                       ))}
                   </button>
                 </TableHead>
-                {/* Priority */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[90px]">
-                  {' '}
                   <button
                     onClick={() => handleSort('priority')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span>Priority</span>
                     {sortField === 'priority' &&
@@ -520,12 +626,10 @@ export function ApprovalTable({
                       ))}
                   </button>
                 </TableHead>
-                {/* Expired */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[80px]">
-                  {' '}
                   <button
                     onClick={() => handleSort('expired')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span>Expired</span>
                     {sortField === 'expired' &&
@@ -536,12 +640,10 @@ export function ApprovalTable({
                       ))}
                   </button>
                 </TableHead>
-                {/* Status */}
                 <TableHead className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[90px]">
-                  {' '}
                   <button
                     onClick={() => handleSort('status')}
-                    className="flex items-center gap-1 hover:text-gray-700"
+                    className="flex items-center gap-1 hover:text-gray-700 focus:outline-none"
                   >
                     <span>Status</span>
                     {sortField === 'status' &&
@@ -557,21 +659,23 @@ export function ApprovalTable({
             <TableBody className="bg-white divide-y divide-gray-200">
               {displayedApprovals.length > 0 ? (
                 displayedApprovals.map((approval) => (
-                  <TableRow key={approval.id} className="hover:bg-gray-50">
-                    {' '}
+                  <TableRow
+                    key={approval.id}
+                    className="hover:bg-gray-50"
+                    data-state={
+                      selectedIds.includes(approval.id) ? 'selected' : undefined
+                    }
+                  >
                     <TableCell className="px-3 py-1 whitespace-nowrap">
-                      {' '}
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(approval.id)}
                         onChange={() => toggleSelectOne(approval.id)}
-                        className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out rounded"
+                        className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out rounded border-gray-300 focus:ring-blue-500"
                         aria-labelledby={`approval-name-${approval.id}`}
                       />
                     </TableCell>
-                    {/* Name */}
                     <TableCell className="px-3 py-1 whitespace-nowrap text-sm font-medium text-gray-900 max-w-[200px] truncate">
-                      {' '}
                       <Link
                         id={`approval-name-${approval.id}`}
                         href={`/dashboard/approval/${approval.id}?type=${btoa(
@@ -587,61 +691,43 @@ export function ApprovalTable({
                         {approval.name}
                       </Link>
                     </TableCell>
-                    {/* Requester */}
                     <TableCell
                       className="px-3 py-1 whitespace-nowrap text-sm text-gray-500 max-w-[200px] truncate"
                       title={approval.requester}
                     >
-                      {' '}
                       {approval.requester}
                     </TableCell>
-                    {/* Description */}
                     <TableCell
                       className="px-3 py-1 whitespace-nowrap text-sm text-gray-500 max-w-[250px] truncate"
                       title={approval.description}
                     >
-                      {' '}
-                      {/* Adjusted styles */}
                       {approval.description}
                     </TableCell>
-                    {/* Approvers # */}
                     <TableCell className="px-3 py-1 whitespace-nowrap text-sm text-gray-500 text-center">
-                      {' '}
                       {approval.approvers.length}
                     </TableCell>
-                    {/* Created */}
                     <TableCell className="px-3 py-1 whitespace-nowrap text-sm text-gray-500">
-                      {' '}
-                      {/* Adjusted styles */}
                       {new Date(approval.date).toLocaleDateString()}
                     </TableCell>
-                    {/* Due By */}
                     <TableCell className="px-3 py-1 whitespace-nowrap text-sm text-gray-500">
-                      {' '}
                       {approval.due_date
                         ? new Date(approval.due_date).toLocaleDateString()
                         : 'N/A'}
                     </TableCell>
-                    {/* Priority */}
                     <TableCell className="px-3 py-1 whitespace-nowrap text-sm">
-                      {' '}
                       <Badge
                         variant="outline"
-                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPriorityColor(approval.priority)}`} // Adjusted badge styles
+                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${getPriorityColor(approval.priority)}`}
                       >
                         {approval.priority}
                       </Badge>
                     </TableCell>
-                    {/* Expired */}
                     <TableCell
                       className={`px-3 py-1 whitespace-nowrap text-sm ${approval.expired ? 'text-red-600 font-medium' : 'text-gray-500'}`}
                     >
-                      {' '}
                       {approval.expired ? 'Yes' : 'No'}
                     </TableCell>
-                    {/* Status */}
                     <TableCell className="px-3 py-1 whitespace-nowrap text-sm text-gray-500 capitalize">
-                      {' '}
                       {approval.status}
                     </TableCell>
                   </TableRow>

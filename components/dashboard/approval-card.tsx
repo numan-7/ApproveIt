@@ -95,7 +95,8 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
   return (
     <div className="space-y-4">
-      <ApprovalDetailsCard approval={approval} user={user} />
+      // @ts-ignore
+      {user && <ApprovalDetailsCard approval={approval} user={user} />}
       <ApprovalStatusCard
         approval={approval}
         user={user}
@@ -111,9 +112,9 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
 interface ApprovalDetailsCardProps {
   approval: Approval;
-  user?: {
-    email: string;
-    name: string;
+  user: {
+    email?: string;
+    name?: string;
   };
 }
 
