@@ -95,7 +95,7 @@ export function ApprovalCard({ approval }: ApprovalCardProps) {
 
   return (
     <div className="space-y-4">
-      // @ts-ignore
+      {/* // @ts-ignore */}
       {user && <ApprovalDetailsCard approval={approval} user={user} />}
       <ApprovalStatusCard
         approval={approval}
