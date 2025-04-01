@@ -43,10 +43,10 @@ export async function GET(req: Request) {
     .order('date', { ascending: true });
 
   const incomingApprovalslength = incoming.filter(
-    (incoming: any) => incoming.status === 'pending'
+    (incoming: any) => incoming.status === 'pending' && !incoming.expired
   ).length;
   const outgoingApprovalslength = outgoing?.filter(
-    (outgoing: any) => outgoing.status === 'pending'
+    (outgoing: any) => outgoing.status === 'pending' && !outgoing.expired
   ).length;
 
   let allEvents: {
