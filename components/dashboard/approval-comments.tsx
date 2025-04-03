@@ -8,20 +8,20 @@ import {
   CardTitle,
   CardFooter,
 } from '@/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+} from '@/components/ui/tooltip';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Send, Trash2 } from 'lucide-react';
+import { MessageSquare, Send, Trash2, Sparkles, X, Loader } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-
-export interface Comment {
-  id: string;
-  approval_id: string;
-  user_email: string;
-  comment: string;
-  created_at: Date;
-  name: string;
-}
+import { generatePrompt } from '@/utils/analysis/analysis';
+import { AnalysisResponse, Comment } from '@/types/approval';
+import { toast } from 'react-toastify';
 
 interface CommentsCardProps {
   comments: Comment[];
@@ -37,10 +37,48 @@ export function CommentsCard({
   const [newComment, setNewComment] = useState('');
   const { user } = useAuth();
 
+  const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
+
   const handlePostComment = async () => {
     if (!newComment.trim()) return;
     await onAddComment(newComment);
     setNewComment('');
+  };
+
+  const handleGetAnalysis = () => {
+    setAnalysis(null);
+    setAnalysisLoading(true);
+
+    const prompt = generatePrompt(comments);
+
+    fetch('/api/approvals/analysis', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ comments: prompt }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.error) {
+          console.error('Error fetching analysis:', data.error);
+          toast.error('Something went wrong while fetching analysis!');
+          return;
+        }
+        setAnalysis(data.json);
+      })
+      .catch((error) => {
+        console.error('Error fetching analysis:', error);
+        toast.error('Something went wrong while fetching analysis!');
+      })
+      .finally(() => {
+        setAnalysisLoading(false);
+      });
+  };
+
+  const handleCloseAnalysis = () => {
+    setAnalysis(null);
   };
 
   return (
@@ -83,6 +121,7 @@ export function CommentsCard({
                       <button
                         onClick={() => onDeleteComment(comment.id)}
                         className="absolute right-0 top-0 hidden text-red-500 group-hover:block"
+                        aria-label="Delete comment"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -98,7 +137,38 @@ export function CommentsCard({
           )}
         </ScrollArea>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col items-start">
+        {analysis && (
+          <div className="w-full mb-3 p-3 border rounded-md bg-gray-50 dark:bg-gray-800 relative text-sm">
+            <button
+              onClick={handleCloseAnalysis}
+              className="absolute top-1 right-1 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              aria-label="Close analysis"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <p className="font-medium mb-1">Mood Analysis:</p>
+
+            <p className="mb-1 font-semibold">Agreeing:</p>
+            <ul>
+              {analysis.agree_summary.points.map((point, index) => (
+                <li key={index} className="ml-4 list-disc">
+                  {point}
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-3 mb-1 font-semibold">Disagreeing:</p>
+            <ul>
+              {analysis.disagree_summary.points.map((point, index) => (
+                <li key={index} className="ml-4 list-disc">
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="w-full space-y-2">
           <Textarea
             placeholder="Add a comment..."
@@ -107,10 +177,36 @@ export function CommentsCard({
             className="resize-none"
             rows={3}
           />
-          <Button onClick={handlePostComment} className="w-full">
-            <Send className="h-4 w-4 mr-2" />
-            Post Comment
-          </Button>
+          <div className="flex gap-1">
+            {comments.length > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className="flex items-center justify-center"
+                      variant="outline"
+                      onClick={handleGetAnalysis}
+                      aria-label="Get mood analysis"
+                      disabled={analysisLoading || !!analysis}
+                    >
+                      {analysisLoading ? (
+                        <Loader className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Get mood analysis</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <Button onClick={handlePostComment} className="w-full">
+              <Send className="h-4 w-4 mr-2" />
+              Post Comment
+            </Button>
+          </div>
         </div>
       </CardFooter>
     </Card>

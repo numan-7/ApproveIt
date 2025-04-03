@@ -61,3 +61,12 @@ export interface Approval {
   attachments: Attachment[];
   zoom_meeting: ZoomMeeting;
 }
+
+export interface AnalysisResponse {
+  agree_summary: {
+    points: string[];
+  };
+  disagree_summary: {
+    points: string[];
+  };
+}
