@@ -22,6 +22,7 @@ import { useAuth } from '@/context/AuthContext';
 import { generatePrompt } from '@/utils/analysis/analysis';
 import { AnalysisResponse, Comment } from '@/types/approval';
 import { toast } from 'react-toastify';
+import { useParams } from 'next/navigation';
 
 interface CommentsCardProps {
   comments: Comment[];
@@ -36,6 +37,7 @@ export function CommentsCard({
 }: CommentsCardProps) {
   const [newComment, setNewComment] = useState('');
   const { user } = useAuth();
+  const params = useParams();
 
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
@@ -46,9 +48,66 @@ export function CommentsCard({
     setNewComment('');
   };
 
+  const cacheResponse = (response: AnalysisResponse) => {
+    const id = typeof params.id === 'string' ? params.id : params.id[0];
+    if (!response || !id) return;
+    const cacheKey = `analysis-${id}`;
+    const cacheData = {
+      cached_comments: comments,
+      cached_comments_count: comments.length,
+      analysis: response,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+  };
+
+  const clearCacheForId = (id: string) => {
+    const cacheKey = `analysis-${id}`;
+    localStorage.removeItem(cacheKey);
+  };
+
+  const getCachedResponse = () => {
+    const id = typeof params.id === 'string' ? params.id : params.id[0];
+    console.log(id);
+    if (!id) return false;
+    const cacheKey = `analysis-${id}`;
+    const cachedData = localStorage.getItem(cacheKey);
+    if (cachedData) {
+      const { cached_comments, cached_comments_count, analysis, timestamp } =
+        JSON.parse(cachedData);
+
+      if (
+        !cached_comments ||
+        !cached_comments_count ||
+        !analysis ||
+        comments.length !== cached_comments_count
+      ) {
+        clearCacheForId(id);
+        return false;
+      }
+
+      comments.forEach((comment) => {
+        const cachedComment = cached_comments.find(
+          (c: Comment) => c.id === comment.id
+        );
+        if (cachedComment && cachedComment.comment !== comment.comment) {
+          return false;
+        }
+      });
+
+      setAnalysis(analysis);
+      setAnalysisLoading(false);
+      return true;
+    }
+    return false;
+  };
+
   const handleGetAnalysis = () => {
     setAnalysis(null);
     setAnalysisLoading(true);
+
+    const cachedResponseFound = getCachedResponse();
+    if (cachedResponseFound) return;
 
     const prompt = generatePrompt(comments);
 
@@ -67,6 +126,7 @@ export function CommentsCard({
           return;
         }
         setAnalysis(data.json);
+        cacheResponse(data.json);
       })
       .catch((error) => {
         console.error('Error fetching analysis:', error);
