@@ -55,7 +55,6 @@ export async function POST() {
 
   // been last than 55 minutes since last update
   if (tokenAge < 3300) {
-    console.log('Token is still fresh');
     return NextResponse.json({ refreshed: false });
   }
 

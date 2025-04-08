@@ -241,7 +241,6 @@ export function ApprovalForm() {
             approvalToEdit.zoom_meeting.meeting_id,
             zoomMeeting
           );
-          console.log(data);
           // get rid of meetingStartTime
           const { meetingStartTime, ...rest } = zoomMeeting;
           zoomMeeting = rest;
@@ -285,7 +284,6 @@ export function ApprovalForm() {
       );
 
       if (approvalToEdit && approvalToEdit?.zoom_meeting.meeting_id) {
-        console.log('approvalToEdit.zoom_meeting', approvalToEdit.zoom_meeting);
         didDeleteMeeting = await deleteMeeting(
           approvalToEdit.zoom_meeting.meeting_id
         );

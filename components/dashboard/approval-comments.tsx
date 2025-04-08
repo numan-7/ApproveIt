@@ -68,7 +68,6 @@ export function CommentsCard({
 
   const getCachedResponse = () => {
     const id = typeof params.id === 'string' ? params.id : params.id[0];
-    console.log(id);
     if (!id) return false;
     const cacheKey = `analysis-${id}`;
     const cachedData = localStorage.getItem(cacheKey);

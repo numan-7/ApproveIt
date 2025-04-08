@@ -16,6 +16,7 @@ import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import { ApprovalDashboardTimeline } from '@/components/dashboard/approval-dashboard-timeline';
 import { UpcomingApprovalsCalendar } from '@/components/dashboard/upcoming-approvals-calendar';
 import { Approval } from '@/types/approval';
+import createClientForBrowser from '@/utils/supabase/client';
 
 export default function Dashboard() {
   interface ApprovalNumbers {
@@ -40,6 +41,8 @@ export default function Dashboard() {
     recentEvents: [],
   });
 
+  const supabase = createClientForBrowser();
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -57,6 +60,59 @@ export default function Dashboard() {
     };
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('real-time-events')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'events',
+        },
+        (payload) => {
+          const newEvent = payload.new as {
+            id: string;
+            type: string;
+            name: string;
+            date: string;
+            approval_id: string;
+          };
+
+          if (!newEvent) return;
+
+          const associatedApproval = approvalStats.approvals.find(
+            (approval) => String(approval.id) == newEvent.approval_id
+          );
+
+          if (!associatedApproval) {
+            console.log('No associated approval found for event:', newEvent);
+            return;
+          }
+
+          const eventAsType = {
+            id: newEvent.id,
+            type: newEvent.type,
+            name: newEvent.name,
+            date: newEvent.date,
+            approvalID: newEvent.approval_id,
+            approvalName: associatedApproval.name,
+          };
+
+          // console.log('New event received:', eventAsType);
+          setApprovalStats((prevStats) => ({
+            ...prevStats,
+            recentEvents: [eventAsType, ...prevStats.recentEvents],
+          }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   if (isLoading) return <SpinnerLoader />;
 

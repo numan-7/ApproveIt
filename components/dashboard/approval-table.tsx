@@ -285,7 +285,6 @@ export function ApprovalTable({
         })
         .sort((a, b) => b.similarity_score - a.similarity_score);
 
-      console.log('matchedApprovals:', results);
 
       setEmbeddingSearchResults(matchedApprovals);
       toast.success('Query processed successfully.');

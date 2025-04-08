@@ -125,8 +125,6 @@ export function UpcomingApprovalsCalendar({
       (a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime()
     );
 
-  console.log(approvalsWithinWeek);
-
   return (
     <Card className="h-full max-h-[550px] font-dm overflow-y-scroll scrollbar scrollbar-hidden scrollbar-hover rounded-md">
       <CardContent className="p-0 h-full overflow-hidden">
