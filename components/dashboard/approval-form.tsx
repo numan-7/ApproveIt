@@ -184,7 +184,12 @@ export function ApprovalForm() {
       setError('Please add at least one approver.');
       return;
     }
-    if (user?.email && approvers.some((a) => a.email === user.email)) {
+    if (
+      user?.email &&
+      approvers.some(
+        (a) => a.email.toLowerCase() === (user.email ?? '').toLowerCase()
+      )
+    ) {
       setError('You cannot add yourself as an approver.');
       return;
     }
