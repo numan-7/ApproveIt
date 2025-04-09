@@ -54,7 +54,7 @@ export function ApprovalTable({
   onDelete,
 }: ApprovalTableProps) {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('pending');
+  const [statusFilter, setStatusFilter] = useState('');
   const [expiredFilter, setExpiredFilter] =
     useState<ExpiredFilterState>('not_expired');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
@@ -284,8 +284,6 @@ export function ApprovalTable({
           };
         })
         .sort((a, b) => b.similarity_score - a.similarity_score);
-
-      console.log('matchedApprovals:', results);
 
       setEmbeddingSearchResults(matchedApprovals);
       toast.success('Query processed successfully.');

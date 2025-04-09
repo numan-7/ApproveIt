@@ -4,7 +4,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Eye, CheckCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-
 interface ApprovalEvent {
   id: string;
   type: string;
@@ -18,21 +17,12 @@ interface ApprovalEventsProps {
   events: ApprovalEvent[];
 }
 
-const getBackgroundForStatus = (status: string) => {
-  switch (status) {
-    case 'approved':
-      return 'bg-green-100';
-    case 'rejected':
-      return 'bg-red-100';
-    default:
-      return 'bg-gray-100';
-  }
-};
-
 export function ApprovalDashboardTimeline({ events }: ApprovalEventsProps) {
   const router = useRouter();
 
-  events = events.reverse(); // order come in descending order for some fufcking reason
+  events = events.sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
 
   const getEventIcon = (type: string) => {
     switch (type) {

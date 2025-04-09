@@ -3,6 +3,7 @@
 import { useZoom } from '@/context/ZoomContext';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import {
   Card,
@@ -49,7 +50,7 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle>Integrations</CardTitle>
           <CardDescription>Manage your connected services</CardDescription>
@@ -85,6 +86,24 @@ export default function SettingsPage() {
               </Button>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Feedback</CardTitle>
+          <CardDescription>Give your feedback to us</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link
+            href="https://docs.google.com/forms/d/e/1FAIpQLSewnrwEvl8wamQs_PZ6s1LRZ3PHbX66pTj8Pf6toMJj4RSKOQ/viewform?usp=header"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Button className="w-full bg-forest/95 hover:bg-forest/100">
+              Navigate to Feedback
+            </Button>
+          </Link>
         </CardContent>
       </Card>
     </div>

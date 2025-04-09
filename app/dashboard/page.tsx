@@ -16,6 +16,7 @@ import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import { ApprovalDashboardTimeline } from '@/components/dashboard/approval-dashboard-timeline';
 import { UpcomingApprovalsCalendar } from '@/components/dashboard/upcoming-approvals-calendar';
 import { Approval } from '@/types/approval';
+import createClientForBrowser from '@/utils/supabase/client';
 
 export default function Dashboard() {
   interface ApprovalNumbers {
@@ -40,6 +41,8 @@ export default function Dashboard() {
     recentEvents: [],
   });
 
+  const supabase = createClientForBrowser();
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -57,6 +60,104 @@ export default function Dashboard() {
     };
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('approval-and-events-update')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'events',
+        },
+        (payload) => {
+          const newEvent = payload.new as {
+            id: string;
+            type: string;
+            name: string;
+            date: string;
+            approval_id: string;
+          };
+
+          if (!newEvent) return;
+
+          const associatedApproval = approvalStats.approvals.find(
+            (approval) =>
+              approval.id.toString() == newEvent.approval_id.toString()
+          );
+
+          if (!associatedApproval) {
+            console.log('No associated approval found for event:', newEvent);
+            return;
+          }
+
+          const eventAsType = {
+            id: newEvent.id,
+            type: newEvent.type,
+            name: newEvent.name,
+            date: newEvent.date,
+            approvalID: newEvent.approval_id,
+            approvalName: associatedApproval.name,
+          };
+
+          setApprovalStats((prevStats) => ({
+            ...prevStats,
+            recentEvents: [eventAsType, ...prevStats.recentEvents],
+          }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'approvals',
+        },
+        (payload) => {
+          if (payload.eventType === 'DELETE') {
+            const deletedApproval = payload.old as Approval;
+
+            if (!deletedApproval) return;
+
+            setApprovalStats((prevStats) => ({
+              ...prevStats,
+              approvals: prevStats.approvals.filter(
+                (approval) => approval.id != deletedApproval.id
+              ),
+            }));
+
+            return;
+          } else {
+            // must be an insert or update
+            const newApproval = payload.new as Approval;
+
+            if (!newApproval) return;
+
+            if (payload.eventType === 'INSERT') {
+              setApprovalStats((prevStats) => ({
+                ...prevStats,
+                approvals: [newApproval, ...prevStats.approvals],
+              }));
+            }
+
+            if (payload.eventType === 'UPDATE') {
+              setApprovalStats((prevStats) => ({
+                ...prevStats,
+                approvals: prevStats.approvals.map((approval) =>
+                  approval.id === newApproval.id ? newApproval : approval
+                ),
+              }));
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase]);
 
   if (isLoading) return <SpinnerLoader />;
 

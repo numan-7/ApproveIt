@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClientForServer } from '@/utils/supabase/server';
 import { UTApi } from 'uploadthing/server';
+import { generateApprovalEmbedding } from '@/utils/embedding/embed';
 
 const deleteUTFiles = async (files: string[]) => {
   const utapi = new UTApi();
@@ -42,13 +43,20 @@ export async function PATCH(
   const body = await req.json();
   const { attachments, comments, ...approvalUpdates } = body;
 
-  const { error: updateError } = await supabase
+  const embedding = await generateApprovalEmbedding(approvalUpdates);
+
+  if (embedding) {
+    approvalUpdates.embedding = embedding;
+  }
+
+  const { data: huhuh, error: updateError } = await supabase
     .from('approvals')
     .update(approvalUpdates)
     .eq('id', id);
+
   if (updateError) {
     console.error('Error updating approval', updateError);
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json('Something went wrong', { status: 500 });
   }
 
   if (Array.isArray(attachments)) {

@@ -184,7 +184,12 @@ export function ApprovalForm() {
       setError('Please add at least one approver.');
       return;
     }
-    if (user?.email && approvers.some((a) => a.email === user.email)) {
+    if (
+      user?.email &&
+      approvers.some(
+        (a) => a.email.toLowerCase() === (user.email ?? '').toLowerCase()
+      )
+    ) {
       setError('You cannot add yourself as an approver.');
       return;
     }
@@ -241,7 +246,6 @@ export function ApprovalForm() {
             approvalToEdit.zoom_meeting.meeting_id,
             zoomMeeting
           );
-          console.log(data);
           // get rid of meetingStartTime
           const { meetingStartTime, ...rest } = zoomMeeting;
           zoomMeeting = rest;
@@ -285,7 +289,6 @@ export function ApprovalForm() {
       );
 
       if (approvalToEdit && approvalToEdit?.zoom_meeting.meeting_id) {
-        console.log('approvalToEdit.zoom_meeting', approvalToEdit.zoom_meeting);
         didDeleteMeeting = await deleteMeeting(
           approvalToEdit.zoom_meeting.meeting_id
         );
