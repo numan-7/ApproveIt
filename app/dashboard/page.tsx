@@ -83,7 +83,8 @@ export default function Dashboard() {
           if (!newEvent) return;
 
           const associatedApproval = approvalStats.approvals.find(
-            (approval) => approval.id == newEvent.approval_id
+            (approval) =>
+              approval.id.toString() == newEvent.approval_id.toString()
           );
 
           if (!associatedApproval) {
@@ -122,7 +123,7 @@ export default function Dashboard() {
             setApprovalStats((prevStats) => ({
               ...prevStats,
               approvals: prevStats.approvals.filter(
-                (approval) => approval.id !== deletedApproval.id
+                (approval) => approval.id != deletedApproval.id
               ),
             }));
 
