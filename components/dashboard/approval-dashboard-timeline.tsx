@@ -17,17 +17,6 @@ interface ApprovalEventsProps {
   events: ApprovalEvent[];
 }
 
-const getBackgroundForStatus = (status: string) => {
-  switch (status) {
-    case 'approved':
-      return 'bg-green-100';
-    case 'rejected':
-      return 'bg-red-100';
-    default:
-      return 'bg-gray-100';
-  }
-};
-
 export function ApprovalDashboardTimeline({ events }: ApprovalEventsProps) {
   const router = useRouter();
 

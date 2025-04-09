@@ -63,7 +63,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('real-time-events')
+      .channel('approval-and-events-update')
       .on(
         'postgres_changes',
         {
@@ -100,11 +100,55 @@ export default function Dashboard() {
             approvalName: associatedApproval.name,
           };
 
-          // console.log('New event received:', eventAsType);
           setApprovalStats((prevStats) => ({
             ...prevStats,
             recentEvents: [eventAsType, ...prevStats.recentEvents],
           }));
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'approvals',
+        },
+        (payload) => {
+          if (payload.eventType === 'DELETE') {
+            const deletedApproval = payload.old as Approval;
+
+            if (!deletedApproval) return;
+
+            setApprovalStats((prevStats) => ({
+              ...prevStats,
+              approvals: prevStats.approvals.filter(
+                (approval) => approval.id !== deletedApproval.id
+              ),
+            }));
+
+            return;
+          } else {
+            // must be an insert or update
+            const newApproval = payload.new as Approval;
+
+            if (!newApproval) return;
+
+            if (payload.eventType === 'INSERT') {
+              setApprovalStats((prevStats) => ({
+                ...prevStats,
+                approvals: [newApproval, ...prevStats.approvals],
+              }));
+            }
+
+            if (payload.eventType === 'UPDATE') {
+              setApprovalStats((prevStats) => ({
+                ...prevStats,
+                approvals: prevStats.approvals.map((approval) =>
+                  approval.id === newApproval.id ? newApproval : approval
+                ),
+              }));
+            }
+          }
         }
       )
       .subscribe();
