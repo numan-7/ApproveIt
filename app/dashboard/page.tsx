@@ -83,12 +83,14 @@ export default function Dashboard() {
           if (!newEvent) return;
 
           const associatedApproval = approvalStats.approvals.find(
-            (approval) =>
-              approval.id.toString() == newEvent.approval_id.toString()
+            (approval) => approval.id == newEvent.approval_id
           );
 
           if (!associatedApproval) {
-            console.log('No associated approval found for event:', newEvent);
+            console.log(
+              'No associated approval found for event:',
+              newEvent.approval_id
+            );
             return;
           }
 
