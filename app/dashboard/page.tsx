@@ -82,10 +82,8 @@ export default function Dashboard() {
 
           if (!newEvent) return;
 
-          const associatedApproval = approvalStats.approvals.find((approval) =>
-            typeof approval.id != 'string'
-              ? approval.id.toString() == newEvent.approval_id
-              : approval.id == newEvent.approval_id
+          const associatedApproval = approvalStats.approvals.find(
+            (approval) => String(approval.id) === String(newEvent.approval_id)
           );
 
           if (!associatedApproval) {
