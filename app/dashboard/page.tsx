@@ -82,27 +82,21 @@ export default function Dashboard() {
 
           if (!newEvent) return;
 
-          const associatedApproval = approvalStats.approvals.find(
-            (approval) => {
-              console.log(
-                'comparing',
-                String(approval.id),
-                'with',
-                String(newEvent.approval_id)
-              );
-              return String(approval.id) == String(newEvent.approval_id);
+          let associatedApproval = null;
+
+          for (const approval of approvalStats.approvals) {
+            if (String(approval.id) == String(newEvent.approval_id)) {
+              associatedApproval = approval;
+              break;
             }
-          );
+          }
 
           if (!associatedApproval) {
-            console.log(
-              'No associated approval found for event:',
-              newEvent.approval_id,
-              'and its type is',
-              typeof newEvent.approval_id,
-              associatedApproval
+            throw new Error(
+              `Approval not found for id: ${newEvent.approval_id}. All ids: ${approvalStats.approvals
+                .map((a) => a.id)
+                .join(', ')}`
             );
-            return;
           }
 
           const eventAsType = {
