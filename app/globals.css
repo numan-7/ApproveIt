@@ -12,6 +12,12 @@ body {
   }
 }
 
+@supports (height: 100dvh) {
+  .h-100dvh-supported {
+    height: 100dvh;
+  }
+}
+
 @layer utilities {
   .scrollbar::-webkit-scrollbar {
     width: 6px;
