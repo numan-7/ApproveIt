@@ -83,7 +83,15 @@ export default function Dashboard() {
           if (!newEvent) return;
 
           const associatedApproval = approvalStats.approvals.find(
-            (approval) => String(approval.id) === String(newEvent.approval_id)
+            (approval) => {
+              console.log(
+                'comparing',
+                String(approval.id),
+                'with',
+                String(newEvent.approval_id)
+              );
+              return String(approval.id) == String(newEvent.approval_id);
+            }
           );
 
           if (!associatedApproval) {
@@ -91,7 +99,8 @@ export default function Dashboard() {
               'No associated approval found for event:',
               newEvent.approval_id,
               'and its type is',
-              typeof newEvent.approval_id
+              typeof newEvent.approval_id,
+              associatedApproval
             );
             return;
           }
