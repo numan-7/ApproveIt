@@ -83,15 +83,17 @@ export default function Dashboard() {
           if (!newEvent) return;
 
           const associatedApproval = approvalStats.approvals.find((approval) =>
-            typeof approval.id === 'string'
-              ? approval.id == newEvent.approval_id
-              : approval.id.toString() == newEvent.approval_id
+            typeof approval.id != 'string'
+              ? approval.id.toString() == newEvent.approval_id
+              : approval.id == newEvent.approval_id
           );
 
           if (!associatedApproval) {
             console.log(
               'No associated approval found for event:',
-              newEvent.approval_id
+              newEvent.approval_id,
+              'and its type is',
+              typeof newEvent.approval_id
             );
             return;
           }
