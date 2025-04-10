@@ -171,7 +171,7 @@ export default function Dashboard() {
   if (isLoading) return <SpinnerLoader />;
 
   return (
-    <div className="p-4 space-y-3 min-h-screen md:flex md:flex-col">
+    <div className="p-4 space-y-3 min-h-[100dvh] md:flex md:flex-col">
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
       <SummaryCards
