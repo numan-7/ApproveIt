@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { PlusCircle, ClipboardList, CheckSquare, Clock } from 'lucide-react';
 import { SummaryCards } from '@/components/dashboard/summary-cards';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SpinnerLoader } from '@/components/ui/spinner-loader';
 import { ApprovalDashboardTimeline } from '@/components/dashboard/approval-dashboard-timeline';
 import { UpcomingApprovalsCalendar } from '@/components/dashboard/upcoming-approvals-calendar';
@@ -40,6 +40,11 @@ export default function Dashboard() {
     outgoingLength: 0,
     recentEvents: [],
   });
+
+  const approvalStatsRef = useRef(approvalStats);
+  useEffect(() => {
+    approvalStatsRef.current = approvalStats;
+  }, [approvalStats]);
 
   const supabase = createClientForBrowser();
 
@@ -82,10 +87,11 @@ export default function Dashboard() {
 
           if (!newEvent) return;
 
+          const currentApprovals = approvalStatsRef.current.approvals;
           let associatedApproval = null;
 
-          for (const approval of approvalStats.approvals) {
-            if (String(approval.id) == String(newEvent.approval_id)) {
+          for (const approval of currentApprovals) {
+            if (String(approval.id) === String(newEvent.approval_id)) {
               associatedApproval = approval;
               break;
             }
@@ -93,7 +99,7 @@ export default function Dashboard() {
 
           if (!associatedApproval) {
             throw new Error(
-              `Approval not found for id: ${newEvent.approval_id}. All ids: ${approvalStats.approvals
+              `Approval not found for id: ${newEvent.approval_id}. All ids: ${currentApprovals
                 .map((a) => a.id)
                 .join(', ')}`
             );
@@ -124,7 +130,6 @@ export default function Dashboard() {
         (payload) => {
           if (payload.eventType === 'DELETE') {
             const deletedApproval = payload.old as Approval;
-
             if (!deletedApproval) return;
 
             setApprovalStats((prevStats) => ({
@@ -133,29 +138,26 @@ export default function Dashboard() {
                 (approval) => approval.id != deletedApproval.id
               ),
             }));
-
             return;
-          } else {
-            // must be an insert or update
-            const newApproval = payload.new as Approval;
+          }
 
-            if (!newApproval) return;
+          const newApproval = payload.new as Approval;
+          if (!newApproval) return;
 
-            if (payload.eventType === 'INSERT') {
-              setApprovalStats((prevStats) => ({
-                ...prevStats,
-                approvals: [newApproval, ...prevStats.approvals],
-              }));
-            }
+          if (payload.eventType === 'INSERT') {
+            setApprovalStats((prevStats) => ({
+              ...prevStats,
+              approvals: [newApproval, ...prevStats.approvals],
+            }));
+          }
 
-            if (payload.eventType === 'UPDATE') {
-              setApprovalStats((prevStats) => ({
-                ...prevStats,
-                approvals: prevStats.approvals.map((approval) =>
-                  approval.id === newApproval.id ? newApproval : approval
-                ),
-              }));
-            }
+          if (payload.eventType === 'UPDATE') {
+            setApprovalStats((prevStats) => ({
+              ...prevStats,
+              approvals: prevStats.approvals.map((approval) =>
+                approval.id === newApproval.id ? newApproval : approval
+              ),
+            }));
           }
         }
       )
@@ -197,7 +199,7 @@ export default function Dashboard() {
 
         <Card className="rounded-md flex flex-col justify-between">
           <CardHeader>
-            <CardTitle className="flex items-center p-">
+            <CardTitle className="flex items-center">
               <ClipboardList className="mr-2 h-5 w-5 text-green-500" />
               Outgoing Approvals
             </CardTitle>
