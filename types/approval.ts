@@ -46,7 +46,7 @@ export interface Approval {
       invitees: string[];
     }
   ): any;
-  id: number | string;
+  id: number;
   name: string;
   requester: string;
   approvers: Approvers[];
