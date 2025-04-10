@@ -17,7 +17,7 @@ export default function Home() {
   if (authLoading) return <SpinnerLoader isHome={true} />;
 
   return (
-    <div className="flex flex-col min-h-svh font-sans">
+    <div className="flex flex-col min-h-[100dvh] font-sans">
       <Header
         isSidebarOpen={isSidebarOpen}
         openSidebar={openSidebar}
